@@ -1,0 +1,48 @@
+export function validateRegister(req, res, next) {
+  const { name, email, password } = req.body
+  if (!name || !email || !password)
+    return res.status(400).json({ message: "All fields required" })
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return res.status(400).json({ message: "Invalid email format" })
+  if (password.length < 6)
+    return res.status(400).json({
+      message: "Password must be at least 6 characters"
+    })
+  next()
+}
+
+export function validateLogin(req, res, next) {
+  const { email, password } = req.body
+  if (!email || !password)
+    return res.status(400).json({ message: "All fields required" })
+  next()
+}
+
+export function validateCurriculumGenerate(req, res, next) {
+  const {
+    programName, degreeType, department, specialization,
+    durationYears, durationSemesters, totalCredits, electivePreference
+  } = req.body
+  if (
+    !programName || !degreeType || !department ||
+    !specialization || !durationYears || !durationSemesters ||
+    !totalCredits || !electivePreference
+  ) return res.status(400).json({ message: "All fields required" })
+  if (durationYears < 2 || durationYears > 5)
+    return res.status(400).json({
+      message: "Duration must be between 2 and 5 years"
+    })
+  if (durationSemesters !== durationYears * 2)
+    return res.status(400).json({
+      message: "Semesters must equal years × 2"
+    })
+  if (totalCredits < 120 || totalCredits > 240)
+    return res.status(400).json({
+      message: "Total credits must be between 120 and 240"
+    })
+  if (![30, 40, 50].includes(Number(electivePreference)))
+    return res.status(400).json({
+      message: "Elective preference must be 30, 40, or 50"
+    })
+  next()
+}
