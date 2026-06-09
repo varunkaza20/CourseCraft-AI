@@ -27,7 +27,7 @@ async function callWithRetry(fn, retries = 3, delayMs = 2000) {
   }
 }
 
-const generateCurriculum = async (programData) => {
+const generateCurriculum = async (programData, customInstructions = "") => {
 
   // ── Pre-compute full credit plan in JS ──
   const plan = buildSemesterPlan(programData);
@@ -92,7 +92,7 @@ ${slotLines}
            8. prerequisite: courseCode string from a previous semester or null.
               Semester 1 always null.
            9. type must match exactly what is specified per course slot.
-           10. Generate 8 to 12 program outcomes specific to the specialization.`
+           10. Generate 8 to 12 program outcomes specific to the specialization.${customInstructions ? "\n\nCUSTOM INSTITUTION INSTRUCTIONS:\n" + customInstructions : ""}`
         },
         {
           role: "user",
@@ -272,6 +272,101 @@ ${slotLines}
       `Invalid number of program outcomes: ` +
       `got ${parsed.programOutcomes?.length ?? 0}, expected 8–12`
     );
+  }
+
+  return parsed;
+};
+
+// ─────────────────────────────────────────────
+// Course Syllabus Generation
+// ─────────────────────────────────────────────
+export const generateCourseSyllabus = async (courseData, customInstructions = "") => {
+  const response = await callWithRetry(() =>
+    groq.chat.completions.create({
+      model           : "llama-3.3-70b-versatile",
+      temperature     : 0.4,
+      max_tokens      : 6000,
+      response_format : { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+          `You are an expert academic course designer specializing in
+           outcome-based education. You design detailed, industry-relevant
+           course syllabi for university programs.
+           RULES:
+           1. Return ONLY valid JSON. No markdown, no explanation.
+           2. Unit topics must be specific to the course domain.
+           3. Estimated hours per unit must be realistic.
+              Total hours across all units should be approximately
+              ${courseData.credits * 15} (standard credit hour formula).
+           4. Prerequisites must be realistic for the difficulty level.
+           5. Course objectives must start with Bloom's action verbs.
+           6. If includesLab is true, generate labSyllabus array.
+              If false, return labSyllabus as empty array [].${customInstructions ? "\n\nCUSTOM INSTITUTION INSTRUCTIONS:\n" + customInstructions : ""}`
+        },
+        {
+          role: "user",
+          content:
+          `Design a complete course syllabus for:
+
+   Course Name      : ${courseData.courseName}
+   Course Code      : ${courseData.courseCode}
+   Credits          : ${courseData.credits}
+   Difficulty Level : ${courseData.difficultyLevel}
+   Number of Units  : ${courseData.numberOfUnits}
+   Course Type      : ${courseData.courseType}
+   Includes Lab     : ${courseData.includesLab ? "Yes" : "No"}
+   ${courseData.includesLab ? `Number of Experiments: ${courseData.numberOfExperiments}` : ""}
+
+   Total contact hours target: ${courseData.credits * 15} hours
+   Distribute these hours across ${courseData.numberOfUnits} units.
+
+   Return this exact JSON:
+   {
+     "courseDescription": string (2-3 sentences),
+     "prerequisites": [string],
+     "courseObjectives": [string] (5-7 objectives with Bloom's verbs),
+     "units": [
+       {
+         "unitNumber": number,
+         "unitTitle": string,
+         "topics": [string] (4-7 topics per unit),
+         "estimatedHours": number
+       }
+     ],
+     "labSyllabus": [
+       {
+         "experimentNumber": number,
+         "title": string,
+         "aim": string,
+         "estimatedHours": number
+       }
+     ]
+   }`
+        }
+      ]
+    })
+  );
+
+  const raw     = response.choices[0].message.content;
+  const cleaned = raw.replace(/```json|```/g, "").trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    throw new Error("Groq returned invalid JSON for course: " + e.message);
+  }
+
+  if (!parsed.units || parsed.units.length !== courseData.numberOfUnits) {
+    throw new Error(`Wrong number of units generated: got ${parsed.units?.length ?? 0}, expected ${courseData.numberOfUnits}`);
+  }
+  if (courseData.includesLab) {
+    if (!parsed.labSyllabus || parsed.labSyllabus.length !== courseData.numberOfExperiments) {
+      throw new Error(`Wrong number of lab experiments: got ${parsed.labSyllabus?.length ?? 0}, expected ${courseData.numberOfExperiments}`);
+    }
+  } else {
+    parsed.labSyllabus = [];
   }
 
   return parsed;

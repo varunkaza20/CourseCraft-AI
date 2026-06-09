@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  customInstructions: {
+    type: String,
+    default: "",
+    maxlength: 500
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { GraduationCap, Quote, CheckCircle2 } from 'lucide-react';
+import { GraduationCap, CheckCircle2, LayoutGrid, BookOpen, BarChart2, FileDown } from 'lucide-react';
 import LoginForm from '../components/auth/LoginForm';
 import SignupForm from '../components/auth/SignupForm';
 import { useAuth } from '../hooks/useAuth';
+import ROUTES from '../constants/routes';
 
 export default function LoginPage() {
   const [activeTab, setActiveTab] = useState('login');
@@ -14,13 +15,21 @@ export default function LoginPage() {
   }
 
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
   }
+
+  const features = [
+    { icon: LayoutGrid, text: "Generate semester-wise curricula in minutes" },
+    { icon: BookOpen,   text: "Design detailed course syllabi with unit plans" },
+    { icon: BarChart2,  text: "Map outcomes using Bloom's taxonomy" },
+    { icon: FileDown,   text: "Export reports as PDF or DOCX" },
+  ];
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Left Panel (Hidden on mobile) */}
+      {/* Left Panel */}
       <div className="hidden md:flex md:w-[45%] bg-primary text-white flex-col justify-between p-12">
+        {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="bg-white/20 p-1.5 rounded-md flex items-center justify-center">
             <GraduationCap className="w-5 h-5 text-white" />
@@ -28,31 +37,40 @@ export default function LoginPage() {
           <span className="font-medium text-xl">CourseCraft AI</span>
         </div>
 
-        <div className="w-full max-w-sm mx-auto">
-          <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-6 relative">
-            <Quote className="w-6 h-6 text-white mb-4 opacity-70" />
-            <p className="text-white text-lg leading-relaxed font-medium mb-4">
-              "CourseCraft AI saved our department weeks of curriculum planning work. The Bloom's mapping alone is worth it."
+        {/* Middle — Project Overview */}
+        <div className="w-full max-w-sm mx-auto space-y-6">
+          <div>
+            <h2 className="text-xl font-medium text-white mb-3">What is CourseCraft AI?</h2>
+            <p className="text-white/70 text-sm leading-relaxed">
+              CourseCraft AI is an AI-powered academic program design platform built for educators and curriculum designers.
+              It automates the most time-consuming parts of academic planning — from generating full semester-wise curricula
+              to mapping learning outcomes against Bloom's taxonomy.
             </p>
-            <p className="text-primary-light text-sm">
-              — Dr. Priya Sharma, Head of CSE, VIT University
-            </p>
+          </div>
+
+          <div>
+            <h3 className="text-base font-medium text-white mb-4">What can you do here?</h3>
+            <div className="space-y-3">
+              {features.map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-white" />
+                  </div>
+                  <span className="text-sm text-white/90">{text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Bottom bullets */}
         <div className="space-y-3 max-w-sm mx-auto w-full">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-primary-light shrink-0" />
-            <span className="text-sm font-medium">Curriculum generated in minutes</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-primary-light shrink-0" />
-            <span className="text-sm font-medium">Bloom's taxonomy auto-mapped</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-primary-light shrink-0" />
-            <span className="text-sm font-medium">Export-ready reports</span>
-          </div>
+          {["Curriculum generated in minutes", "Bloom's taxonomy auto-mapped", "Export-ready reports"].map(t => (
+            <div key={t} className="flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-white/70 shrink-0" />
+              <span className="text-sm font-medium">{t}</span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -91,7 +109,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Render Form */}
           {activeTab === 'login' ? <LoginForm /> : <SignupForm />}
 
           <p className="text-xs text-gray-500 text-center mt-8">

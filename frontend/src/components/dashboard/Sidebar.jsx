@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import { GraduationCap, LayoutGrid, BookOpen, BarChart2, FileDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import ROUTES from '../../constants/routes';
@@ -14,38 +14,22 @@ export default function Sidebar() {
   };
 
   const navItems = [
-    {
-      name: 'Curriculum Builder',
-      icon: LayoutGrid,
-      to: ROUTES.CURRICULUM,
-    },
-    {
-      name: 'Course Generation',
-      icon: BookOpen,
-      to: ROUTES.COURSES,
-    },
-    {
-      name: 'Outcome Mapping',
-      icon: BarChart2,
-      to: ROUTES.OUTCOMES,
-    },
-    {
-      name: 'Export & Share',
-      icon: FileDown,
-      to: ROUTES.EXPORT,
-    },
+    { name: 'Curriculum Builder',  icon: LayoutGrid, to: ROUTES.CURRICULUM },
+    { name: 'Course Generation',   icon: BookOpen,   to: ROUTES.COURSES },
+    { name: 'Outcome Mapping',     icon: BarChart2,  to: ROUTES.OUTCOMES },
+    { name: 'Export & Share',      icon: FileDown,   to: ROUTES.EXPORT },
   ];
 
   return (
     <div className="w-64 h-full bg-white border-r border-gray-200 flex flex-col hidden md:flex shrink-0">
-      {/* Top Section */}
+      {/* Logo */}
       <div className="p-6">
-        <div className="flex items-center gap-2 mb-1">
+        <Link to={ROUTES.HOME} className="flex items-center gap-2 mb-1 no-underline">
           <div className="bg-primary text-white p-1.5 rounded-md flex items-center justify-center">
             <GraduationCap className="w-5 h-5" />
           </div>
           <span className="font-medium text-lg text-gray-900 tracking-tight">CourseCraft AI</span>
-        </div>
+        </Link>
         <p className="text-xs text-gray-500 font-medium px-1">Workspace: {user?.name}</p>
       </div>
 

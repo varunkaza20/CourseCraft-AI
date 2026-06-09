@@ -50,17 +50,61 @@ export const getMe = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
   try {
-    const { name } = req.body;
-    if (!name || name.trim().length < 2) {
-      return res.status(400).json({ message: 'Name must be at least 2 characters' });
-    }
+    const { name, customInstructions } = req.body;
     const user = await User.findById(req.user.userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (name !== undefined) {
+      if (!name || name.trim().length < 2) {
+        return res.status(400).json({ message: 'Name must be at least 2 characters' });
+      }
+      user.name = name.trim();
     }
-    user.name = name.trim();
+
+    if (customInstructions !== undefined) {
+      user.customInstructions = customInstructions.slice(0, 500);
+    }
+
     await user.save();
-    res.status(200).json({ message: 'Profile updated', user: { _id: user._id, name: user.name, email: user.email } });
+    res.status(200).json({
+      message: 'Profile updated',
+      user: { _id: user._id, name: user.name, email: user.email, customInstructions: user.customInstructions }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
+      return res.status(400).json({ message: 'All fields required' });
+    if (newPassword.length < 6)
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect' });
+
+    user.password = newPassword;
+    await user.save();
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { default: Program } = await import('../models/Program.js');
+    const { default: Course }  = await import('../models/Course.js');
+    await Program.deleteMany({ userId });
+    await Course.deleteMany({ userId });
+    res.status(200).json({ message: 'Profile reset successfully' });
   } catch (error) {
     next(error);
   }

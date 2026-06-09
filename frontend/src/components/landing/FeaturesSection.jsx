@@ -3,7 +3,7 @@ import { LayoutGrid, BookOpen, BarChart2, FileDown } from 'lucide-react';
 
 export default function FeaturesSection() {
   return (
-    <section className="py-24 bg-gray-50 px-4 sm:px-6 lg:px-8">
+    <section id="features" className="py-24 bg-gray-50 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-16">
           <span className="text-primary font-semibold text-sm tracking-wider uppercase mb-3 block">Core features</span>

@@ -3,6 +3,7 @@ import cors          from "cors"
 import helmet        from "helmet"
 import authRoutes    from "./routes/auth.routes.js"
 import curriculumRoutes from "./routes/curriculum.routes.js"
+import courseRoutes  from "./routes/course.routes.js"
 import errorMiddleware  from "./middleware/error.middleware.js"
 import config        from "./config/env.js"
 
@@ -18,6 +19,7 @@ app.get("/api/health", (req, res) =>
 
 app.use("/api/auth",       authRoutes)
 app.use("/api/curriculum", curriculumRoutes)
+app.use("/api/courses",    courseRoutes)
 
 app.use(errorMiddleware)
 

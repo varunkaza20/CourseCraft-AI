@@ -4,25 +4,39 @@ import { useAuth } from '../../hooks/useAuth';
 import ROUTES from '../../constants/routes';
 import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 export default function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]           = useState(false);
+  const [errors, setErrors]             = useState({});
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const validate = () => {
+    const e = {};
+    if (!email)                   e.email    = "Email is required";
+    else if (!validateEmail(email)) e.email  = "Enter a valid email address";
+    if (!password)                e.password = "Password is required";
+    else if (password.length < 6) e.password = "Password must be at least 6 characters";
+    return e;
+  };
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    const e = validate();
+    if (Object.keys(e).length) { setErrors(e); return; }
+    setErrors({});
     setLoading(true);
-    setError('');
-
     const res = await login(email, password);
     if (res.success) {
       navigate(ROUTES.DASHBOARD);
     } else {
-      setError(res.message);
+      setErrors({ api: res.message });
       setLoading(false);
     }
   };
@@ -34,7 +48,8 @@ export default function LoginForm() {
         <p className="text-gray-500 text-sm">Sign in to your account</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {/* Email */}
         <div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -42,15 +57,16 @@ export default function LoginForm() {
             </div>
             <input
               type="email"
-              required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors sm:text-sm outline-none"
+              onChange={e => setEmail(e.target.value)}
+              className={`block w-full pl-10 pr-3 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors sm:text-sm outline-none ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
               placeholder="Email address"
             />
           </div>
+          {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
         </div>
 
+        {/* Password */}
         <div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -58,50 +74,29 @@ export default function LoginForm() {
             </div>
             <input
               type={showPassword ? "text" : "password"}
-              required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors sm:text-sm outline-none"
+              onChange={e => setPassword(e.target.value)}
+              className={`block w-full pl-10 pr-10 py-2.5 border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors sm:text-sm outline-none ${errors.password ? 'border-red-400' : 'border-gray-200'}`}
               placeholder="Password"
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
-              ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
-              )}
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              {showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}
             </button>
           </div>
+          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
           <div className="flex justify-end mt-2">
-            <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">
-              Forgot password?
-            </a>
+            <a href="#" className="text-sm text-primary hover:text-primary/80 transition-colors">Forgot password?</a>
           </div>
         </div>
 
-        {error && (
-          <div className="text-red-500 text-sm font-medium text-center">
-            {error}
-          </div>
-        )}
+        {errors.api && <p className="text-red-500 text-sm font-medium text-center">{errors.api}</p>}
 
         <button
           type="submit"
           disabled={loading}
           className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          {loading ? (
-            <>
-              <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-              Signing in...
-            </>
-          ) : (
-            'Sign in'
-          )}
+          {loading ? <><Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />Signing in...</> : 'Sign in'}
         </button>
       </form>
     </div>
