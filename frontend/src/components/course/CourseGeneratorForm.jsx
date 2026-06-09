@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Sparkles, LayoutGrid, BookOpen, Loader2, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { Sparkles, LayoutGrid, BookOpen, Loader2 } from 'lucide-react';
 import { usePrograms } from '../../hooks/usePrograms';
 import axiosInstance from '../../utils/axiosInstance';
 
@@ -25,23 +25,27 @@ export default function CourseGeneratorForm({ onGenerate, isGenerating, error })
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  // Load program when selected
-  useEffect(() => {
-    if (!selectedProgramId) { setProgramCourses([]); return; }
+  const handleProgramChange = (progId) => {
+    setProgId(progId);
+    setSelCourse('');
+    if (!progId) {
+      setProgramCourses([]);
+      return;
+    }
     setLoadingProg(true);
-    axiosInstance.get(`/api/curriculum/${selectedProgramId}`)
+    axiosInstance.get(`/api/curriculum/${progId}`)
       .then(r => {
         const allCourses = r.data.program?.generatedCurriculum?.semesters?.flatMap(s => s.courses) || [];
         setProgramCourses(allCourses);
       })
       .catch(() => setProgramCourses([]))
       .finally(() => setLoadingProg(false));
-  }, [selectedProgramId]);
+  };
 
-  // Auto-fill when course selected from existing
-  useEffect(() => {
-    if (!selectedCourseCode) return;
-    const c = programCourses.find(x => x.courseCode === selectedCourseCode);
+  const handleCourseChange = (courseCode) => {
+    setSelCourse(courseCode);
+    if (!courseCode) return;
+    const c = programCourses.find(x => x.courseCode === courseCode);
     if (c) {
       setForm(f => ({
         ...f,
@@ -52,7 +56,7 @@ export default function CourseGeneratorForm({ onGenerate, isGenerating, error })
         courseType: c.type || 'core',
       }));
     }
-  }, [selectedCourseCode, programCourses]);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -96,7 +100,7 @@ export default function CourseGeneratorForm({ onGenerate, isGenerating, error })
             <div>
               <label className={labelCls}>Select Curriculum</label>
               <div className="relative">
-                <select className={inputCls} value={selectedProgramId} onChange={e => { setProgId(e.target.value); setSelCourse(''); }}>
+                <select className={inputCls} value={selectedProgramId} onChange={e => handleProgramChange(e.target.value)}>
                   <option value="">-- Select a curriculum --</option>
                   {(programs || []).map(p => (
                     <option key={p._id} value={p._id}>{p.programName} ({p.degreeType} · {p.department})</option>
@@ -108,7 +112,7 @@ export default function CourseGeneratorForm({ onGenerate, isGenerating, error })
             {programCourses.length > 0 && (
               <div>
                 <label className={labelCls}>Select Course</label>
-                <select className={inputCls} value={selectedCourseCode} onChange={e => setSelCourse(e.target.value)}>
+                <select className={inputCls} value={selectedCourseCode} onChange={e => handleCourseChange(e.target.value)}>
                   <option value="">-- Select a course --</option>
                   {programCourses.map(c => (
                     <option key={c.courseCode} value={c.courseCode}>{c.courseCode} — {c.courseName} ({c.credits} cr)</option>

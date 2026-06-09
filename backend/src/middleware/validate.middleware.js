@@ -70,3 +70,23 @@ export function validateCourseGenerate(req, res, next) {
     })
   next()
 }
+
+export function validateOutcomeGenerate(req, res, next) {
+  const { syllabusText } = req.body;
+  if (!syllabusText || typeof syllabusText !== "string") {
+    return res.status(400).json({ message: "Syllabus text is required and must be a string." });
+  }
+  next();
+}
+
+export function validateMatrixGenerate(req, res, next) {
+  const { courseOutcomes, programOutcomes } = req.body;
+  if (!courseOutcomes || !Array.isArray(courseOutcomes) || courseOutcomes.length === 0) {
+    return res.status(400).json({ message: "Valid courseOutcomes array is required." });
+  }
+  if (!programOutcomes || !Array.isArray(programOutcomes) || programOutcomes.length === 0) {
+    return res.status(400).json({ message: "Valid programOutcomes array is required." });
+  }
+  next();
+}
+

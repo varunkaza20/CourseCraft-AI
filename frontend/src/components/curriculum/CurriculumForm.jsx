@@ -50,7 +50,7 @@ export default function CurriculumForm({ onGenerate, isGenerating, pastPrograms,
     <div className="flex flex-col gap-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="mb-6">
-          <h2 className="text-lg font-medium text-gray-900">Generate curriculum</h2>
+          <h2 className="text-lg font-medium text-gray-900">Curriculum builder</h2>
           <p className="text-sm text-gray-500">Fill in your program details below</p>
         </div>
 
@@ -200,7 +200,7 @@ export default function CurriculumForm({ onGenerate, isGenerating, pastPrograms,
               ) : (
                 <>
                   <Sparkles className="w-5 h-5" />
-                  Generate curriculum
+                  Curriculum builder
                 </>
               )}
             </button>

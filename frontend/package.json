@@ -13,6 +13,7 @@
     "axios": "^1.17.0",
     "coursecraft-ai-monorepo": "file:..",
     "lucide-react": "^1.17.0",
+    "pdfjs-dist": "^6.0.227",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.17.0"

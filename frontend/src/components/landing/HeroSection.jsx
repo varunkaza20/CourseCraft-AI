@@ -14,7 +14,7 @@ export default function HeroSection() {
   };
 
   return (
-    <div className="relative overflow-hidden bg-white pt-16 sm:pt-24 lg:pt-32 pb-16">
+    <div className="relative overflow-hidden bg-white pt-10 sm:pt-12 lg:pt-16 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-4xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">

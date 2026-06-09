@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import CourseGeneratorForm from '../components/course/CourseGeneratorForm';
 import CourseResult from '../components/course/CourseResult';
 import { useCourses } from '../hooks/useCourses';
 
 export default function CoursePage() {
+  const [searchParams] = useSearchParams();
+  const courseId = searchParams.get('id');
+
   const [generatedCourse, setGeneratedCourse] = useState(null);
   const [isGenerating, setIsGenerating]       = useState(false);
   const [error, setError]                     = useState(null);
-  const { generateCourse } = useCourses();
+  const { generateCourse, getCourseById } = useCourses();
 
   const handleGenerate = async (formData) => {
     setIsGenerating(true);
@@ -21,6 +25,25 @@ export default function CoursePage() {
       setIsGenerating(false);
     }
   };
+
+  useEffect(() => {
+    if (courseId) {
+      const loadCourse = async () => {
+        try {
+          setIsGenerating(true);
+          const course = await getCourseById(courseId);
+          setGeneratedCourse(course);
+          setError(null);
+        } catch (err) {
+          setError(err.response?.data?.message || 'Failed to load course details');
+        } finally {
+          setIsGenerating(false);
+        }
+      };
+      loadCourse();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
 
   const handleNew = () => setGeneratedCourse(null);
 

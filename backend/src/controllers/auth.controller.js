@@ -12,7 +12,15 @@ export const register = async (req, res, next) => {
     const user = new User({ name, email, password });
     await user.save();
     const token = jwt.sign({ userId: user._id }, config.jwtSecret, { expiresIn: '7d' });
-    res.status(201).json({ token, user: { _id: user._id, name: user.name, email: user.email } });
+    res.status(201).json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        customInstructions: user.customInstructions || ""
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -30,7 +38,15 @@ export const login = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
     const token = jwt.sign({ userId: user._id }, config.jwtSecret, { expiresIn: '7d' });
-    res.status(200).json({ token, user: { _id: user._id, name: user.name, email: user.email } });
+    res.status(200).json({
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        customInstructions: user.customInstructions || ""
+      }
+    });
   } catch (error) {
     next(error);
   }
@@ -42,7 +58,14 @@ export const getMe = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.status(200).json({ user: { _id: user._id, name: user.name, email: user.email } });
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        customInstructions: user.customInstructions || ""
+      }
+    });
   } catch (error) {
     next(error);
   }

@@ -372,4 +372,155 @@ export const generateCourseSyllabus = async (courseData, customInstructions = ""
   return parsed;
 };
 
+export const generateCourseOutcomes = async (syllabusText, customInstructions = "") => {
+  const response = await callWithRetry(() =>
+    groq.chat.completions.create({
+      model           : "llama-3.3-70b-versatile",
+      temperature     : 0.2,
+      max_tokens      : 3000,
+      response_format : { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+          `You are an expert in outcome-based education (OBE) and curriculum design.
+           Generate exactly 5 to 6 Course Outcomes (COs) for the provided syllabus text.
+           
+           RULES:
+           1. Return ONLY valid JSON. No markdown, no explanation.
+           2. Each CO must start with an action verb from Bloom's taxonomy.
+           3. Assign a primary Bloom's taxonomy level to each CO.
+              (e.g., "Remembering", "Understanding", "Applying", "Analyzing", "Evaluating", "Creating")
+           4. The COs must be clear, measurable, and specific to the syllabus.
+           ${customInstructions ? "\n\nCUSTOM INSTRUCTIONS:\n" + customInstructions : ""}`
+        },
+        {
+          role: "user",
+          content:
+          `Based on the following syllabus text, generate the Course Outcomes.
+          
+           SYLLABUS TEXT:
+           ${syllabusText.substring(0, 15000)}
+           
+           Return this exact JSON:
+           {
+             "courseOutcomes": [
+               {
+                 "coNumber": number,
+                 "statement": string,
+                 "bloomsLevel": string
+               }
+             ]
+           }`
+        }
+      ]
+    })
+  );
+
+  const raw     = response.choices[0].message.content;
+  const cleaned = raw.replace(/```json|```/g, "").trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    throw new Error("Groq returned invalid JSON for course outcomes: " + e.message);
+  }
+
+  return parsed;
+};
+
+export const generateCOPOMatrix = async (courseOutcomes, programOutcomes, customInstructions = "") => {
+  const response = await callWithRetry(() =>
+    groq.chat.completions.create({
+      model           : "llama-3.3-70b-versatile",
+      temperature     : 0.1,
+      max_tokens      : 3000,
+      response_format : { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+          `You are an expert in outcome-based education (OBE) accreditation.
+You generate CO-PO correlation matrices for NBA/NAAC compliance.
+
+CORRELATION SCALE (strictly follow this):
+  3 = High   : The CO directly and substantially addresses the PO.
+               The connection is explicit in the CO statement.
+               Use sparingly — maximum 20% of cells should be 3.
+  2 = Medium : The CO partially addresses the PO or supports it
+               indirectly. A clear but not primary connection.
+  1 = Low    : The CO has a minor or peripheral relation to the PO.
+               Use when there is a weak but real connection.
+  0 = None   : No meaningful relationship. Use this most often.
+
+REALISTIC MATRIX EXPECTATIONS:
+  - A typical CO maps strongly (3) to 1–2 POs only
+  - A typical CO maps moderately (2) to 2–3 POs
+  - Most cells (50–60%) should be 0
+  - Average matrix value should be between 1.0 and 2.0
+  - A row where every PO gets 2 or 3 is almost certainly wrong
+
+MAPPING METHODOLOGY:
+  Step 1: Read the CO statement carefully.
+  Step 2: Identify the core skill or knowledge it targets.
+  Step 3: For each PO, ask:
+    "Does this CO directly help achieve this PO?"
+    Yes, primarily   → 3
+    Yes, partially   → 2
+    Tangentially     → 1
+    No               → 0
+  Step 4: Verify no CO row has more than 3 cells with value 3.
+
+ABSOLUTE RULES:
+1. Return ONLY valid JSON. No markdown, no explanation, no fences.
+2. Every CO must have exactly one mapping entry per PO.
+   No missing cells. No extra cells.
+3. Correlation values must be exactly 0, 1, 2, or 3.
+   No decimals. No nulls. No empty strings.
+4. coNumber values must match the input CO numbers exactly.
+5. poNumber values must match the input PO numbers exactly.
+6. Do not invent POs or COs not present in the input.${customInstructions ? "\n\nCUSTOM INSTRUCTIONS:\n" + customInstructions : ""}`
+        },
+        {
+          role: "user",
+          content:
+          `Generate a CO-PO matrix for the following:
+          
+           COURSE OUTCOMES:
+           ${JSON.stringify(courseOutcomes, null, 2)}
+           
+           PROGRAM OUTCOMES:
+           ${JSON.stringify(programOutcomes, null, 2)}
+           
+           Return this exact JSON:
+           {
+             "copoMatrix": [
+               {
+                 "coNumber": number,
+                 "poMappings": [
+                   {
+                     "poNumber": number,
+                     "correlationLevel": number
+                   }
+                 ]
+               }
+             ]
+           }`
+        }
+      ]
+    })
+  );
+
+  const raw     = response.choices[0].message.content;
+  const cleaned = raw.replace(/```json|```/g, "").trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    throw new Error("Groq returned invalid JSON for CO-PO matrix: " + e.message);
+  }
+
+  return parsed;
+};
+
 export { generateCurriculum };

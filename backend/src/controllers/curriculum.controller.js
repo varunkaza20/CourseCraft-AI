@@ -78,21 +78,26 @@ export const deleteProgram = async (req, res, next) => {
   }
 };
 
-export const getStats = async (req, res, next) => {
-  try {
-    const userId = req.user.userId;
-    const curriculumCount = await Program.countDocuments({ userId });
-    let courseCount = 0;
+  export const getStats = async (req, res, next) => {
     try {
-      courseCount = await Course.countDocuments({ userId });
-    } catch (_) { /* Course model may not have data yet */ }
-    res.json({
-      curriculums : curriculumCount,
-      courses     : courseCount,
-      outcomes    : 0,
-      exports     : 0
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+      const userId = req.user.userId;
+      const curriculumCount = await Program.countDocuments({ userId });
+      let courseCount = 0;
+      let outcomesCount = 0;
+      try {
+        courseCount = await Course.countDocuments({ userId });
+      } catch (_) { /* Course model may not have data yet */ }
+      try {
+        const { default: OutcomeMapping } = await import("../models/OutcomeMapping.js");
+        outcomesCount = await OutcomeMapping.countDocuments({ userId });
+      } catch (_) { /* OutcomeMapping may not have data yet */ }
+      res.json({
+        curriculums : curriculumCount,
+        courses     : courseCount,
+        outcomes    : outcomesCount,
+        exports     : 0
+      });
+    } catch (error) {
+      next(error);
+    }
+  };

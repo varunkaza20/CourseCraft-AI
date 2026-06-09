@@ -21,7 +21,7 @@ export default function FeaturesSection() {
             <div className="w-12 h-12 bg-primary-light rounded-lg flex items-center justify-center mb-6">
               <LayoutGrid className="w-6 h-6 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Curriculum generation</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Curriculum builder</h3>
             <p className="text-gray-600 leading-relaxed">
               Enter your program details and get a structured semester-wise curriculum with credit distribution, course types, and prerequisites — powered by Gemini AI.
             </p>

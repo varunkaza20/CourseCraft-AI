@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import CurriculumForm from '../components/curriculum/CurriculumForm';
 import CurriculumResult from '../components/curriculum/CurriculumResult';
 import { usePrograms } from '../hooks/usePrograms';
 import { LayoutGrid } from 'lucide-react';
 
 export default function CurriculumPage() {
+  const [searchParams] = useSearchParams();
+  const programId = searchParams.get('id');
+
   const [generatedProgram, setGeneratedProgram] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
@@ -16,15 +20,22 @@ export default function CurriculumPage() {
     fetchPrograms
   } = usePrograms();
 
-  const loadProgram = async (programId) => {
+  const loadProgram = async (id) => {
     try {
-      const program = await fetchProgramById(programId);
+      const program = await fetchProgramById(id);
       setGeneratedProgram(program);
       setError(null);
     } catch (err) {
       console.error("Failed to load program", err);
     }
   };
+
+  useEffect(() => {
+    if (programId) {
+      loadProgram(programId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [programId]);
 
   const handleGenerate = async (formData) => {
     setIsGenerating(true);

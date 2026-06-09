@@ -35,14 +35,14 @@ export default function Navbar() {
             <a
               href="#features"
               onClick={handleFeaturesClick}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
             >
               Features
             </a>
             <a
               href="#"
               onClick={(e) => { e.preventDefault(); window.open(DEMO_VIDEO_URL, "_blank", "noopener,noreferrer"); }}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              className="text-base font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
             >
               How it works
             </a>

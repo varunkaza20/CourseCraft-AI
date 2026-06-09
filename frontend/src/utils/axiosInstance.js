@@ -19,7 +19,8 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const isAuthRoute = err.config?.url?.includes('/api/auth/login') || err.config?.url?.includes('/api/auth/register');
+    if (err.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem("cc_token");
       window.location.href = ROUTES.LOGIN;
     }
