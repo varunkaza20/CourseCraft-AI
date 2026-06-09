@@ -92,3 +92,20 @@ export const getMappingById = async (req, res, next) => {
     next(error);
   }
 };
+
+export const deleteMapping = async (req, res, next) => {
+  try {
+    const result = await OutcomeMapping.deleteOne({
+      _id: req.params.id,
+      userId: req.user.userId,
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "Mapping not found" });
+    }
+
+    res.status(200).json({ message: "Mapping deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};

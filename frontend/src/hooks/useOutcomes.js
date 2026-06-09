@@ -78,6 +78,19 @@ export const useOutcomes = () => {
     }
   }, []);
 
+  const deleteMapping = useCallback(async (id) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await axiosInstance.delete(`/api/outcomes/${id}`);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to delete mapping");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
@@ -86,5 +99,6 @@ export const useOutcomes = () => {
     saveMapping,
     getMappingById,
     getMyMappings,
+    deleteMapping,
   };
 };

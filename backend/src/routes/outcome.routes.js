@@ -6,7 +6,8 @@ import {
   generateMatrix, 
   saveMapping, 
   getMyMappings, 
-  getMappingById 
+  getMappingById,
+  deleteMapping 
 } from "../controllers/outcome.controller.js";
 
 const router = express.Router();
@@ -16,5 +17,6 @@ router.post("/generate-matrix", authMiddleware, validateMatrixGenerate, generate
 router.post("/save", authMiddleware, saveMapping);
 router.get("/my-mappings", authMiddleware, getMyMappings);
 router.get("/:id", authMiddleware, getMappingById);
+router.delete("/:id", authMiddleware, deleteMapping);
 
 export default router;

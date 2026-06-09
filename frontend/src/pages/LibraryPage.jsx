@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { usePrograms } from '../hooks/usePrograms';
 import { useCourses } from '../hooks/useCourses';
 import { useOutcomes } from '../hooks/useOutcomes';
-import { LayoutGrid, BookOpen, BarChart2, Calendar, Loader2 } from 'lucide-react';
+import { LayoutGrid, BookOpen, BarChart2, Calendar, Loader2, Trash2 } from 'lucide-react';
 import { timeAgo } from '../utils/timeAgo';
 import Modal from '../components/common/Modal';
 import CurriculumResult from '../components/curriculum/CurriculumResult';
@@ -10,9 +10,9 @@ import CourseResult from '../components/course/CourseResult';
 import MappingResult from '../components/outcome/MappingResult';
 
 export default function LibraryPage() {
-  const { programs, loadingPrograms, fetchProgramById } = usePrograms();
-  const { courses, loadingCourses, getCourseById } = useCourses();
-  const { getMyMappings, getMappingById } = useOutcomes();
+  const { programs, loadingPrograms, fetchProgramById, deleteProgram } = usePrograms();
+  const { courses, loadingCourses, getCourseById, deleteCourse } = useCourses();
+  const { getMyMappings, getMappingById, deleteMapping } = useOutcomes();
   
   const [mappings, setMappings] = useState([]);
   const [loadingMappings, setLoadingMappings] = useState(true);
@@ -57,6 +57,24 @@ export default function LibraryPage() {
     setTimeout(() => setSelectedItem(null), 300); // clear after animation
   };
 
+  const handleDelete = async (e, type, id) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+
+    try {
+      if (type === 'program') {
+        await deleteProgram(id);
+      } else if (type === 'course') {
+        await deleteCourse(id);
+      } else if (type === 'mapping') {
+        await deleteMapping(id);
+        setMappings(prev => prev.filter(m => m._id !== id));
+      }
+    } catch (err) {
+      alert("Failed to delete item.");
+    }
+  };
+
   const Section = ({ title, icon: Icon, items, loading, type, renderCard }) => (
     <div className="mb-10">
       <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -75,7 +93,7 @@ export default function LibraryPage() {
           No {title.toLowerCase()} found.
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-6 custom-scrollbar snap-x">
+        <div className="flex gap-4 overflow-x-auto pb-6 custom-scrollbar snap-x relative z-0">
           {items.map(item => renderCard(item, () => handleCardClick(type, item._id)))}
         </div>
       )}
@@ -86,9 +104,16 @@ export default function LibraryPage() {
     <div 
       key={p._id} 
       onClick={onClick}
-      className="w-80 shrink-0 bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all snap-start flex flex-col h-40 group"
+      className="w-80 shrink-0 bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all snap-start flex flex-col h-40 group relative"
     >
-      <h3 className="font-bold text-gray-900 line-clamp-1 mb-1 group-hover:text-primary transition-colors">{p.programName}</h3>
+      <button 
+        onClick={(e) => handleDelete(e, 'program', p._id)}
+        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10"
+        title="Delete Program"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+      <h3 className="font-bold text-gray-900 line-clamp-1 mb-1 pr-6 group-hover:text-primary transition-colors">{p.programName}</h3>
       <p className="text-sm text-gray-500 mb-auto line-clamp-2">{p.degreeType} · {p.department}</p>
       <div className="flex items-center gap-2 text-xs text-gray-400 mt-4">
         <Calendar className="w-3.5 h-3.5" />
@@ -101,9 +126,16 @@ export default function LibraryPage() {
     <div 
       key={c._id} 
       onClick={onClick}
-      className="w-80 shrink-0 bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:border-emerald-500/50 transition-all snap-start flex flex-col h-40 group"
+      className="w-80 shrink-0 bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:border-emerald-500/50 transition-all snap-start flex flex-col h-40 group relative"
     >
-      <h3 className="font-bold text-gray-900 line-clamp-1 mb-1 group-hover:text-emerald-600 transition-colors">{c.courseName}</h3>
+      <button 
+        onClick={(e) => handleDelete(e, 'course', c._id)}
+        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10"
+        title="Delete Course"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+      <h3 className="font-bold text-gray-900 line-clamp-1 mb-1 pr-6 group-hover:text-emerald-600 transition-colors">{c.courseName}</h3>
       <p className="text-sm text-gray-500 mb-auto line-clamp-2">{c.courseCode} · {c.credits} Credits · {c.courseType}</p>
       <div className="flex items-center gap-2 text-xs text-gray-400 mt-4">
         <Calendar className="w-3.5 h-3.5" />
@@ -116,9 +148,16 @@ export default function LibraryPage() {
     <div 
       key={m._id} 
       onClick={onClick}
-      className="w-80 shrink-0 bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:border-amber-500/50 transition-all snap-start flex flex-col h-40 group"
+      className="w-80 shrink-0 bg-white border border-gray-200 rounded-xl p-5 cursor-pointer hover:shadow-lg hover:border-amber-500/50 transition-all snap-start flex flex-col h-40 group relative"
     >
-      <h3 className="font-bold text-gray-900 line-clamp-1 mb-1 group-hover:text-amber-600 transition-colors">{m.courseName}</h3>
+      <button 
+        onClick={(e) => handleDelete(e, 'mapping', m._id)}
+        className="absolute top-3 right-3 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all z-10"
+        title="Delete Mapping"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+      <h3 className="font-bold text-gray-900 line-clamp-1 mb-1 pr-6 group-hover:text-amber-600 transition-colors">{m.courseName}</h3>
       <p className="text-sm text-gray-500 mb-auto line-clamp-2">{m.courseCode} · Source: {m.sourceType?.replace('_', ' ')}</p>
       <div className="flex items-center gap-2 text-xs text-gray-400 mt-4">
         <Calendar className="w-3.5 h-3.5" />
