@@ -64,6 +64,20 @@ export const useOutcomes = () => {
     }
   }, []);
 
+  const getMyMappings = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.get('/api/outcomes/my-mappings');
+      return response.data.mappings;
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to fetch mappings");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
@@ -71,5 +85,6 @@ export const useOutcomes = () => {
     generateMatrix,
     saveMapping,
     getMappingById,
+    getMyMappings,
   };
 };

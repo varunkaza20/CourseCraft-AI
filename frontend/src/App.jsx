@@ -13,6 +13,8 @@ import { Loader2, BarChart2 } from 'lucide-react';
 
 import OutcomePage from './pages/OutcomePage';
 
+import ExportPage from './pages/ExportPage';
+
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
 
@@ -43,7 +45,7 @@ export default function App() {
           <Route path="curriculum" element={<CurriculumPage />} />
           <Route path="courses"    element={<CoursePage />} />
           <Route path="outcomes"   element={<OutcomePage />} />
-          <Route path="export"     element={<div className="flex h-full items-center justify-center text-gray-500">Export coming soon</div>} />
+          <Route path="export"     element={<ExportPage />} />
           <Route path="profile"    element={<ProfilePage />} />
         </Route>
       </Route>
