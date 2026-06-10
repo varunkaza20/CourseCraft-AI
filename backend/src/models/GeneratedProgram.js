@@ -74,9 +74,8 @@ const generatedProgramSchema = new mongoose.Schema({
   }
 });
 
-generatedProgramSchema.pre("save", function(next) {
+generatedProgramSchema.pre("save", function() {
   this.updatedAt = Date.now();
-  next();
 });
 
 export default mongoose.model("GeneratedProgram", generatedProgramSchema);

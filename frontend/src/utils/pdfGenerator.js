@@ -295,19 +295,96 @@ const generateProgramSchedulePDF = (doc, data) => {
   doc.setFontSize(12);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
-  doc.text(`${data.difficultyLevel ? data.difficultyLevel.charAt(0).toUpperCase() + data.difficultyLevel.slice(1) : "-"} | ${data.numberOfWeeks} Weeks`, 14, 30);
+  doc.text(`${data.difficultyLevel ? data.difficultyLevel.charAt(0).toUpperCase() + data.difficultyLevel.slice(1) : "-"} | ${data.numberOfWeeks} Weeks${data.includesCapstone ? " | Capstone Included" : ""}`, 14, 30);
   doc.setTextColor(0);
 
-  let currentY = 40;
+  let currentY = 42;
   
   const schedule = data.generatedSchedule || {};
+  const summary = schedule.programSummary || {};
   
+  // Summary Stats
+  if (summary.totalHours) {
+    doc.setFontSize(11);
+    doc.text(`Total Hours: ${summary.totalHours} | Topics: ${summary.totalTopics} | Deliverables: ${summary.totalDeliverables}`, 14, currentY);
+    currentY += 10;
+  }
+  
+  // Overview
   if (schedule.programOverview) {
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Program Overview", 14, currentY);
+    currentY += 6;
     doc.setFontSize(10);
-    doc.setFont("helvetica", "italic");
+    doc.setFont("helvetica", "normal");
     const splitDesc = doc.splitTextToSize(schedule.programOverview, 180);
     doc.text(splitDesc, 14, currentY);
-    currentY += (splitDesc.length * 5) + 8;
+    currentY += (splitDesc.length * 5) + 6;
+  }
+  
+  // Target Audience
+  if (schedule.targetAudience) {
+    if (currentY > 260) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Target Audience", 14, currentY);
+    currentY += 6;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const splitAud = doc.splitTextToSize(schedule.targetAudience, 180);
+    doc.text(splitAud, 14, currentY);
+    currentY += (splitAud.length * 5) + 6;
+  }
+  
+  // Prerequisites & Recommended Tools
+  if ((schedule.prerequisites?.length > 0) || (summary.recommendedTools?.length > 0)) {
+    if (currentY > 250) { doc.addPage(); currentY = 20; }
+    
+    if (schedule.prerequisites?.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Prerequisites:", 14, currentY);
+      currentY += 5;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const preqText = schedule.prerequisites.join(", ");
+      const splitPreq = doc.splitTextToSize(preqText, 180);
+      doc.text(splitPreq, 14, currentY);
+      currentY += (splitPreq.length * 5) + 4;
+    }
+    
+    if (summary.recommendedTools?.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Recommended Tools:", 14, currentY);
+      currentY += 5;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const toolsText = summary.recommendedTools.join(", ");
+      const splitTools = doc.splitTextToSize(toolsText, 180);
+      doc.text(splitTools, 14, currentY);
+      currentY += (splitTools.length * 5) + 6;
+    }
+  }
+
+  // Learning Outcomes
+  if (schedule.learningOutcomes?.length > 0) {
+    if (currentY > 250) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Learning Outcomes", 14, currentY);
+    currentY += 6;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    schedule.learningOutcomes.forEach((obj, i) => {
+      const text = `${i + 1}. ${obj}`;
+      const splitObj = doc.splitTextToSize(text, 180);
+      if (currentY + (splitObj.length * 5) > 280) { doc.addPage(); currentY = 20; }
+      doc.text(splitObj, 14, currentY);
+      currentY += (splitObj.length * 5) + 2;
+    });
+    currentY += 6;
   }
 
   if (schedule.weeklySchedule?.length > 0) {
@@ -320,21 +397,25 @@ const generateProgramSchedulePDF = (doc, data) => {
       `W${w.weekNumber}`,
       w.weekTitle || "-",
       (w.topics || []).join(", "),
+      (w.activities || []).join(", "),
+      (w.deliverables || []).join(", "),
       w.estimatedHours ? `${w.estimatedHours}h` : "-"
     ]);
 
     autoTable(doc, {
       startY: currentY + 5,
-      head: [["Week", "Title", "Topics", "Est. Hours"]],
+      head: [["Week", "Title", "Topics", "Activities", "Deliverables", "Hours"]],
       body: tableRows,
       theme: "grid",
       headStyles: { fillColor: [147, 51, 234] }, // Purple color
-      styles: { fontSize: 9 },
+      styles: { fontSize: 8 },
       columnStyles: {
-        0: { cellWidth: 15, halign: 'center' },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 105 },
-        3: { cellWidth: 20, halign: 'center' },
+        0: { cellWidth: 12, halign: 'center' },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 45 },
+        4: { cellWidth: 35 },
+        5: { cellWidth: 12, halign: 'center' },
       },
     });
     currentY = doc.lastAutoTable.finalY + 12;
@@ -346,7 +427,9 @@ const generateProgramSchedulePDF = (doc, data) => {
     
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(217, 119, 6); // Amber
     doc.text(`Capstone Project (${capstone.suggestedWeeks} Weeks)`, 14, currentY);
+    doc.setTextColor(0);
     currentY += 8;
 
     doc.setFontSize(12);
@@ -359,18 +442,28 @@ const generateProgramSchedulePDF = (doc, data) => {
     doc.text(splitCapDesc, 14, currentY);
     currentY += (splitCapDesc.length * 5) + 8;
 
-    if (capstone.deliverables?.length > 0) {
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text("Deliverables:", 14, currentY);
-      currentY += 6;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      capstone.deliverables.forEach(d => {
-        doc.text(`• ${d}`, 14, currentY);
-        currentY += 5;
-      });
-    }
+    const renderList = (title, items) => {
+      if (items && items.length > 0) {
+        if (currentY > 260) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "bold");
+        doc.text(title, 14, currentY);
+        currentY += 6;
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        items.forEach(d => {
+          const splitItem = doc.splitTextToSize(`• ${d}`, 180);
+          if (currentY + (splitItem.length * 5) > 280) { doc.addPage(); currentY = 20; }
+          doc.text(splitItem, 14, currentY);
+          currentY += (splitItem.length * 5) + 2;
+        });
+        currentY += 4;
+      }
+    };
+
+    renderList("Objectives:", capstone.objectives);
+    renderList("Deliverables:", capstone.deliverables);
+    renderList("Evaluation Criteria:", capstone.evaluationCriteria);
   }
 };
 
