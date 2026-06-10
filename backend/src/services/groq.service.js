@@ -50,9 +50,7 @@ ${slotLines}
     ${sem.progressionStage === "capstone"
       ? "Last course must be a Capstone Project or Industry Project."
       : ""}
-    Lab limit: MAXIMUM ${sem.labBudget} courses with hasLab: true in this semester.
-               Do not exceed this limit under any circumstances.
-    `.trim();
+    `;
   }).join("\n\n");
 
   const deptPrefix = programData.department
@@ -62,7 +60,6 @@ ${slotLines}
     .toUpperCase()
     .slice(0, 3);
 
-  // ── Call Groq for names and metadata only ──
   const response = await callWithRetry(() =>
     groq.chat.completions.create({
       model            : "llama-3.3-70b-versatile",
@@ -86,88 +83,15 @@ ${slotLines}
               Semester 1 codes: ${deptPrefix}101, ${deptPrefix}102 ...
               Semester 2 codes: ${deptPrefix}201, ${deptPrefix}202 ...
               No duplicate codes.
-           5. COURSE NAMING — follow these rules strictly:
-              a. Course names must be SHORT and STANDARD.
-                 Use the universally accepted name for the subject.
-                 Do NOT append the program name, specialization name,
-                 department name, or degree name to course titles.
-              b. WRONG naming patterns (never do these):
-                 'Data Structures for Artificial Intelligence'
-                 'Machine Learning for Computer Science Engineering'
-                 'Mathematics for AI and ML Program'
-                 'Python Programming for AIML Students'
-                 'Database Management for B.Tech CSE'
-              c. CORRECT naming patterns (always do these):
-                 'Data Structures and Algorithms'
-                 'Machine Learning'
-                 'Engineering Mathematics'
-                 'Python Programming'
-                 'Database Management Systems'
-              d. The specialization context is already known from the
-                 program details. Course names do not need to repeat it.
-                 A course name should be what appears on a university
-                 transcript — concise, standard, and discipline-neutral.
-              e. Specialization-specific courses ARE allowed when the
-                 course is genuinely unique to that domain:
-                 OK: 'Natural Language Processing'
-                 OK: 'Computer Vision'
-                 OK: 'Reinforcement Learning'
-                 OK: 'Embedded Systems Programming'
-                 NOT OK: 'Natural Language Processing for AIML'
-                 NOT OK: 'Computer Vision Techniques for AI Students'
-              f. Maximum course name length: 6 words.
-                 If a name exceeds 6 words, shorten it.
-                 'Advanced Topics in Deep Learning Architectures for AI'
-                 → 'Advanced Deep Learning Architectures'
+           5. Course names must be specific to the specialization.
+              Never generic. Never placeholder names.
            6. difficultyLevel: "beginner"|"intermediate"|"advanced" only.
            7. hasLab: true for courses with practical components.
               At least 30% of all courses must have hasLab: true.
-           8. LAB DISTRIBUTION — follow this exactly:
-              a. Maximum 3 lab courses per semester. Hard limit.
-              b. Recommended distribution pattern:
-                 Early semesters (first half): maximum 3 labs/semester
-                 Later semesters (second half): maximum 2 labs/semester
-              c. Count hasLab: true courses per semester carefully.
-                 If a semester would exceed the limit, set the least
-                 critical course's hasLab to false instead.
-              d. Courses that should NEVER have a lab:
-                 Mathematics, Statistics, Theory courses, History of X,
-                 Management courses, Seminar courses, Project courses
-                 (projects are separate from labs)
-              e. Courses that should ALWAYS have a lab when present:
-                 Programming courses, Networking, Operating Systems,
-                 Database courses, any course with 'Laboratory' or
-                 'Practical' in the name
-              f. Overall cap: no more than 40% of total courses across
-                 the entire curriculum should have hasLab: true.
-           9. PREREQUISITE ORDERING — this is critical:
-              a. Semester 1 courses MUST have prerequisite: null always.
-              b. A course in semester N can ONLY list a prerequisite
-                 from semester 1 to N-1. NEVER from the same semester N.
-              c. Before assigning a prerequisite, ask yourself:
-                 'Can a student realistically take both courses at the
-                 same time?' If yes → prerequisite: null.
-                 If no (one must come before the other) → assign the
-                 earlier course as prerequisite and place the dependent
-                 course in a LATER semester.
-              d. Common ordering rules to always follow:
-                 - Programming/Coding fundamentals → must come before
-                   Data Structures, Algorithms, any advanced coding course
-                 - Mathematics (Calculus, Linear Algebra) → must come
-                   before courses that use them (ML, Signal Processing)
-                 - Any 'Fundamentals of X' or 'Introduction to X' course
-                   → must come at least one semester before 'Advanced X'
-                   or 'X Applications' or 'X for Y'
-                 - Database basics → must come before advanced DB courses
-                 - Networking basics → before security or cloud courses
-              e. If course B depends on course A:
-                 course A semester number MUST be strictly less than
-                 course B semester number. Never equal.
-              f. Double-check every prerequisite assignment before
-                 finalizing. A wrong prerequisite placement is the most
-                 common error in curriculum generation.
-           10. type must match exactly what is specified per course slot.
-           11. Generate 8 to 12 program outcomes specific to the specialization.${customInstructions ? "\n\nCUSTOM INSTITUTION INSTRUCTIONS:\n" + customInstructions : ""}`
+           8. prerequisite: courseCode string from a previous semester or null.
+              Semester 1 always null.
+           9. type must match exactly what is specified per course slot.
+           10. Generate 8 to 12 program outcomes specific to the specialization.${customInstructions ? "\n\nCUSTOM INSTITUTION INSTRUCTIONS:\n" + customInstructions : ""}`
         },
         {
           role: "user",
@@ -190,60 +114,12 @@ ${slotLines}
   ${semesterInstructions}
 
   COURSE NAMING GUIDE:
-  Keep course names SHORT, STANDARD, and UNIVERSAL.
-  Do NOT include '${programData.specialization}' or
-  '${programData.department}' or '${programData.degreeType}'
-  inside any course name.
-
-  Think: what would this course be called on a university
-  transcript? That is the name to use.
-
-  Good examples for any program:
-    'Data Structures and Algorithms'
-    'Operating Systems'
-    'Computer Networks'
-    'Linear Algebra'
-    'Probability and Statistics'
-    'Object Oriented Programming'
-    'Software Engineering'
-    'Artificial Intelligence'
-    'Machine Learning'
-    'Deep Learning'
-    'Computer Vision'
-    'Natural Language Processing'
-
-  Bad examples — never do this:
-    'Data Structures for ${programData.specialization}'
-    'Machine Learning for ${programData.department} Students'
-    'Applied Mathematics for ${programData.programName}'
-
-  PREREQUISITES AND ORDERING GUIDE:
-  For every course, follow this exact process:
-
-  a. Ask: does this course require knowledge from another
-     course in this curriculum?
-     Yes → identify which course, verify that course is in
-            an EARLIER semester, then assign its courseCode.
-     No  → prerequisite: null
-
-  b. SAME SEMESTER CHECK: If course A and course B are both
-     in semester N, neither can be a prerequisite of the other.
-     If one must come before the other, move the dependent
-     course to semester N+1 or later.
-
-  c. Mandatory orderings for this curriculum:
-     - Place all foundational courses (intro, fundamentals,
-       basics) in semesters 1 or 2.
-     - Place all intermediate courses in semesters 3 or 4.
-     - Place all advanced and applied courses in semesters
-       5 and beyond.
-     - No advanced course should appear before semester 4.
-
-  d. After generating all semesters, do a final pass:
-     For each course with a non-null prerequisite,
-     verify: prerequisite course semester < this course semester.
-     If this check fails, either move the course or
-     set prerequisite: null.
+  Specialization is "${programData.specialization}".
+  All course names must reflect this specialization.
+  Example good names:
+    - "Machine Learning Fundamentals for ${programData.specialization}"
+    - "Advanced ${programData.specialization} Techniques"
+    - "Industry Applications in ${programData.specialization}"
 
   Return this exact JSON schema:
   {
@@ -346,125 +222,6 @@ ${slotLines}
         `courses sum ${courseSum} !== plan target ${semester.totalCredits}. ` +
         `This is a code bug, not a Groq error.`
       );
-    }
-  }
-
-  // ── Lab enforcement: cap labs per semester ──
-  for (let sIdx = 0; sIdx < parsed.semesters.length; sIdx++) {
-    const semester  = parsed.semesters[sIdx];
-    const semPlan   = plan.semesterPlans[sIdx];
-    const labBudget = semPlan.labBudget;
-
-    const labCourses = semester.courses.filter(c => c.hasLab === true);
-
-    if (labCourses.length > labBudget) {
-      console.warn(
-        `Semester ${semester.semesterNumber}: has ${labCourses.length}` +
-        ` labs, budget is ${labBudget}. Auto-correcting.`
-      );
-
-      const theoryKeywords = [
-        "mathematics", "math", "statistics", "theory", "history",
-        "management", "seminar", "ethics", "communication",
-        "economics", "law", "design thinking"
-      ];
-
-      let flipped = 0;
-      const needed = labCourses.length - labBudget;
-
-      for (const course of labCourses) {
-        if (flipped >= needed) break;
-        const nameLower = course.courseName.toLowerCase();
-        const isTheory  = theoryKeywords.some(k => nameLower.includes(k));
-        if (isTheory) {
-          course.hasLab = false;
-          flipped++;
-        }
-      }
-
-      if (flipped < needed) {
-        const stillLabCourses = semester.courses
-          .filter(c => c.hasLab === true)
-          .reverse();
-
-        for (const course of stillLabCourses) {
-          if (flipped >= needed) break;
-          course.hasLab = false;
-          flipped++;
-        }
-      }
-    }
-  }
-
-  // ── Global lab cap: max 40% of all courses ──
-  const allCourses  = parsed.semesters.flatMap(s => s.courses);
-  const totalCourses = allCourses.length;
-  const labCourses   = allCourses.filter(c => c.hasLab === true);
-  const labRatio     = labCourses.length / totalCourses;
-
-  if (labRatio > 0.40) {
-    console.warn(
-      `Global lab ratio is ${(labRatio * 100).toFixed(1)}% ` +
-      `(${labCourses.length}/${totalCourses}). Trimming to 40% cap.`
-    );
-    const maxLabs    = Math.floor(totalCourses * 0.40);
-    const toFlip     = labCourses.length - maxLabs;
-
-    const theoryKeywords = [
-      "mathematics", "math", "statistics", "theory", "history",
-      "management", "seminar", "ethics", "communication",
-      "economics", "law", "design thinking"
-    ];
-
-    let flipped = 0;
-
-    for (const course of allCourses) {
-      if (flipped >= toFlip) break;
-      if (!course.hasLab) continue;
-      const nameLower = course.courseName.toLowerCase();
-      if (theoryKeywords.some(k => nameLower.includes(k))) {
-        course.hasLab = false;
-        flipped++;
-      }
-    }
-
-    const reversedCourses = [...allCourses].reverse();
-    for (const course of reversedCourses) {
-      if (flipped >= toFlip) break;
-      if (!course.hasLab) continue;
-      course.hasLab = false;
-      flipped++;
-    }
-  }
-
-  // ── Prerequisite ordering validation and auto-fix ──
-  const codeToSemester = {};
-  for (const semester of parsed.semesters) {
-    for (const course of semester.courses) {
-      codeToSemester[course.courseCode] = semester.semesterNumber;
-    }
-  }
-
-  for (const semester of parsed.semesters) {
-    for (const course of semester.courses) {
-      if (!course.prerequisite) continue;
-
-      const prereqSemester = codeToSemester[course.prerequisite];
-
-      if (prereqSemester === undefined) {
-        console.warn(
-          `Course ${course.courseCode} has prerequisite ` +
-          `${course.prerequisite} which does not exist. Clearing.`
-        );
-        course.prerequisite = null;
-      } else if (prereqSemester >= semester.semesterNumber) {
-        console.warn(
-          `Course ${course.courseCode} (sem ${semester.semesterNumber})` +
-          ` has prerequisite ${course.prerequisite}` +
-          ` (sem ${prereqSemester}). Same/later semester. Clearing.`
-        );
-        course.prerequisite = null;
-      }
     }
   }
 
@@ -932,7 +689,7 @@ export const generateWeeklyProgram = async (programData) => {
    ` : `
    FINAL WEEK RULES:
    - Last week must be review, consolidation, and next steps.
-   - No capstone content.
+   - No capstone content.I am gay
    - capstoneProject must be null in the response.
    `}
 
