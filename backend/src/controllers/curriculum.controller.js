@@ -84,6 +84,7 @@ export const deleteProgram = async (req, res, next) => {
       const curriculumCount = await Program.countDocuments({ userId });
       let courseCount = 0;
       let outcomesCount = 0;
+      let generatedProgramCount = 0;
       try {
         courseCount = await Course.countDocuments({ userId });
       } catch (_) { /* Course model may not have data yet */ }
@@ -91,11 +92,16 @@ export const deleteProgram = async (req, res, next) => {
         const { default: OutcomeMapping } = await import("../models/OutcomeMapping.js");
         outcomesCount = await OutcomeMapping.countDocuments({ userId });
       } catch (_) { /* OutcomeMapping may not have data yet */ }
+      try {
+        const { default: GeneratedProgram } = await import("../models/GeneratedProgram.js");
+        generatedProgramCount = await GeneratedProgram.countDocuments({ userId });
+      } catch (_) { /* GeneratedProgram may not have data yet */ }
       res.json({
-        curriculums : curriculumCount,
-        courses     : courseCount,
-        outcomes    : outcomesCount,
-        exports     : 0
+        curriculums      : curriculumCount,
+        courses          : courseCount,
+        outcomes         : outcomesCount,
+        exports          : 0,
+        generatedPrograms: generatedProgramCount
       });
     } catch (error) {
       next(error);

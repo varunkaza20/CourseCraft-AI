@@ -14,6 +14,7 @@ export default function TopBar({ toggleSidebar }) {
       case '/dashboard/curriculum': return 'Curriculum Builder';
       case '/dashboard/courses': return 'Course Generation';
       case '/dashboard/outcomes': return 'Outcome Mapping';
+      case '/dashboard/programs': return 'Program Generator';
       case '/dashboard/export': return 'Export And Download';
       case '/profile':
       case '/dashboard/profile': return 'My Profile';

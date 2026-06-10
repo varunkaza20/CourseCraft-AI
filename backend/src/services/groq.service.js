@@ -523,4 +523,257 @@ ABSOLUTE RULES:
   return parsed;
 };
 
+export const generateWeeklyProgram = async (programData) => {
+  const response = await callWithRetry(() =>
+    groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.5,
+      max_tokens: 8000,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `You are an expert program designer and instructional designer
+   with 20+ years of experience creating structured learning programs,
+   workshops, and bootcamps across technical and non-technical domains.
+
+   You design week-wise schedules that are:
+   - Pedagogically sound with clear learning progression
+   - Practical with hands-on activities and deliverables
+   - Calibrated precisely to the difficulty level specified
+   - Realistic in scope for the number of weeks given
+
+   DIFFICULTY CALIBRATION:
+   beginner:
+     - Assume zero prior knowledge of the subject
+     - Start with fundamentals and core concepts
+     - More time on each topic, slower progression
+     - Activities are guided and structured
+     - Deliverables are small, well-defined exercises
+     - Avoid jargon — explain everything
+     - Weeks 1-2: orientation and foundations only
+
+   intermediate:
+     - Assume basic familiarity with the domain
+     - Move faster through fundamentals
+     - Focus on practical application and real-world use cases
+     - Activities include independent problem-solving
+     - Deliverables are mini-projects or applied exercises
+     - Some industry tools and practices introduced
+
+   advanced:
+     - Assume strong domain knowledge
+     - Skip basics entirely — start at applied/expert level
+     - Focus on cutting-edge topics, research, and complex systems
+     - Activities are open-ended and research-oriented
+     - Deliverables are substantial projects or papers
+     - Industry-grade tools and professional practices expected
+
+   WEEK COUNT CALIBRATION:
+   1-2 weeks   : Focused crash course — 2 to 4 major topics only
+                 No room for deep dives. Prioritize ruthlessly.
+   3-6 weeks   : Short program — cover fundamentals + 1 project
+   7-12 weeks  : Standard bootcamp — full topic coverage + 2 projects
+   13-24 weeks : Extended program — deep coverage + capstone project
+   25-50 weeks : Full course — comprehensive with multiple milestones
+
+   ABSOLUTE RULES:
+   1. Return ONLY valid JSON. No markdown, no explanation, no fences.
+   2. Generate EXACTLY the number of weeks specified. Not more, not less.
+   3. weekNumber must start at 1 and increment by 1 with no gaps.
+   4. Each week must have at least 3 topics and 2 activities.
+   5. estimatedHours per week must be realistic:
+      beginner    : 8–12 hours per week
+      intermediate: 10–15 hours per week
+      advanced    : 12–20 hours per week
+   6. Topics must be specific to the program domain.
+      Never generic placeholders like "Introduction to Topic".
+      Use "Introduction to LangChain Agent Executors" instead.
+   7. learningOutcomes must be 4 to 8 statements starting with
+      Bloom's action verbs.
+   8. recommendedTools must be actual tools, frameworks, or
+      platforms relevant to the program (3 to 8 items).
+   9. programSummary.totalHours must equal sum of all
+      week estimatedHours. Compute this yourself.
+   10. If includesCapstone is true:
+       a. The LAST week of the schedule must be dedicated to the
+          capstone project presentation and submission.
+          weekTitle must include "Capstone" explicitly.
+       b. The second-to-last week must be capstone development/review.
+       c. All earlier weeks must build toward the capstone project.
+       d. The capstoneProject object must be fully populated.
+       e. capstoneProject.suggestedWeeks must equal 2 (last 2 weeks)
+          for programs <= 8 weeks, 3 for programs > 8 weeks.
+   11. If includesCapstone is false:
+       a. Return capstoneProject as null.
+       b. No week should mention "capstone" in title or topics.
+       c. Last week should be a review, consolidation, or
+          final assessment week instead.
+   ${programData.customInstructions ? "\n\nCUSTOM INSTITUTION INSTRUCTIONS:\n" + programData.customInstructions : ""}`
+        },
+        {
+          role: "user",
+          content: `Design a complete week-wise program schedule for:
+
+   Program Name     : ${programData.programName}
+   Difficulty Level : ${programData.difficultyLevel}
+   Number of Weeks  : ${programData.numberOfWeeks}
+   Capstone Project : ${programData.includesCapstone ? "Yes" : "No"}
+
+   PROGRESSION RULES FOR THIS PROGRAM:
+   ${programData.difficultyLevel === "beginner" ? `
+   - Week 1: orientation, why this topic matters, big picture overview
+   - Week 2: absolute fundamentals and core vocabulary
+   - Middle weeks: build concepts gradually, each week on previous
+   - Last week: review, consolidation, and next steps guidance` : ""}
+   ${programData.difficultyLevel === "intermediate" ? `
+   - Week 1: quick recap of prerequisites, set expectations
+   - Early weeks: core concepts with practical exercises
+   - Middle weeks: applied projects and real-world scenarios
+   - Last week: capstone mini-project or integration exercise` : ""}
+   ${programData.difficultyLevel === "advanced" ? `
+   - Week 1: jump straight into complex concepts
+   - Early weeks: advanced theory and architecture
+   - Middle weeks: research topics, complex implementations
+   - Last week: original project, research paper, or system design` : ""}
+
+   ${programData.includesCapstone ? `
+   CAPSTONE RULES FOR THIS PROGRAM:
+   - Reserve the last ${programData.numberOfWeeks > 8 ? 3 : 2} weeks
+     for capstone work:
+     ${programData.numberOfWeeks > 8
+       ? `Second to last 2 weeks: capstone development and peer review
+          Last week: final presentation, submission, evaluation`
+       : `Second to last week: capstone development and review
+          Last week: final presentation and submission`}
+   - All earlier weeks must have topics that feed into the capstone.
+   - The capstoneProject object must have:
+       title            : a specific project title matching the domain
+       description      : 2-3 sentences on what the learner builds
+       objectives       : 3 to 5 specific project objectives
+       deliverables     : 3 to 5 tangible submission items
+       evaluationCriteria: 3 to 5 criteria for grading/assessment
+       suggestedWeeks   : ${programData.numberOfWeeks > 8 ? 3 : 2}
+   ` : `
+   FINAL WEEK RULES:
+   - Last week must be review, consolidation, and next steps.
+   - No capstone content.
+   - capstoneProject must be null in the response.
+   `}
+
+   Generate EXACTLY ${programData.numberOfWeeks} week entries.
+
+   For each week provide:
+   - weekTitle    : compelling title for that week's focus
+   - theme        : one-line theme or learning arc for the week
+   - topics       : 3 to 6 specific topics covered (be precise)
+   - activities   : 2 to 4 hands-on activities or exercises
+   - deliverables : 1 to 3 tangible outputs the learner produces
+   - estimatedHours: realistic hours for ${programData.difficultyLevel} level
+
+   Return this exact JSON:
+   {
+     "programOverview"  : "string (3-4 sentences about the program)",
+     "targetAudience"   : "string (1-2 sentences)",
+     "prerequisites"    : ["string"] (3 to 6 items, or ["None"] for beginner),
+     "learningOutcomes" : ["string"] (4 to 8 Bloom's verb outcomes),
+     "weeklySchedule"   : [
+       {
+         "weekNumber"    : "number",
+         "weekTitle"     : "string",
+         "theme"         : "string",
+         "topics"        : ["string"],
+         "activities"    : ["string"],
+         "deliverables"  : ["string"],
+         "estimatedHours": "number"
+       }
+     ],
+     "programSummary": {
+       "totalHours"       : "number",
+       "totalTopics"      : "number",
+       "totalDeliverables": "number",
+       "recommendedTools" : ["string"],
+       "hasCapstone"      : "boolean"
+     },
+     "capstoneProject": {
+       "title"             : "string",
+       "description"       : "string",
+       "objectives"        : ["string"],
+       "deliverables"      : ["string"],
+       "evaluationCriteria": ["string"],
+       "suggestedWeeks"    : "number"
+     }
+   }`
+        }
+      ]
+    })
+  );
+
+  const raw = response.choices[0].message.content;
+  const cleaned = raw.replace(/```json|```/g, "").trim();
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    throw new Error("Groq returned invalid JSON for weekly program: " + e.message);
+  }
+
+  // VALIDATE
+  if (!parsed.weeklySchedule || parsed.weeklySchedule.length !== programData.numberOfWeeks) {
+    throw new Error(`Wrong number of weeks: got ${parsed.weeklySchedule?.length || 0}, expected ${programData.numberOfWeeks}`);
+  }
+
+  for (let i = 0; i < parsed.weeklySchedule.length; i++) {
+    if (parsed.weeklySchedule[i].weekNumber !== i + 1) {
+      parsed.weeklySchedule[i].weekNumber = i + 1;
+    }
+  }
+
+  const actualTotalHours = parsed.weeklySchedule.reduce((sum, w) => sum + w.estimatedHours, 0);
+  if (!parsed.programSummary) parsed.programSummary = {};
+  parsed.programSummary.totalHours = actualTotalHours;
+
+  parsed.programSummary.totalTopics = parsed.weeklySchedule.reduce((sum, w) => sum + (w.topics?.length || 0), 0);
+  parsed.programSummary.totalDeliverables = parsed.weeklySchedule.reduce((sum, w) => sum + (w.deliverables?.length || 0), 0);
+
+  if (!parsed.learningOutcomes || parsed.learningOutcomes.length < 4 || parsed.learningOutcomes.length > 8) {
+    throw new Error("Invalid number of learning outcomes");
+  }
+
+  // Capstone validation
+  if (programData.includesCapstone) {
+    if (!parsed.capstoneProject) {
+      throw new Error("Capstone was requested but capstoneProject is missing");
+    }
+
+    const cp = parsed.capstoneProject;
+
+    if (!cp.title || !cp.description)
+      throw new Error("Capstone project missing title or description");
+
+    if (!cp.objectives || cp.objectives.length < 3)
+      throw new Error("Capstone must have at least 3 objectives");
+
+    if (!cp.deliverables || cp.deliverables.length < 3)
+      throw new Error("Capstone must have at least 3 deliverables");
+
+    if (!cp.evaluationCriteria || cp.evaluationCriteria.length < 3)
+      throw new Error("Capstone must have at least 3 evaluation criteria");
+
+    // Verify last week mentions capstone
+    const lastWeek = parsed.weeklySchedule[parsed.weeklySchedule.length - 1];
+    if (!lastWeek.weekTitle.toLowerCase().includes("capstone")) {
+      lastWeek.weekTitle = lastWeek.weekTitle + " (Capstone)";
+      console.warn("Last week title did not include capstone — auto-corrected");
+    }
+
+    parsed.programSummary.hasCapstone = true;
+  } else {
+    parsed.capstoneProject = null;
+    parsed.programSummary.hasCapstone = false;
+  }
+
+  return parsed;
+};
+
 export { generateCurriculum };

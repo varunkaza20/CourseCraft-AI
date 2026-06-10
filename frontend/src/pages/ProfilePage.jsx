@@ -151,7 +151,7 @@ export default function ProfilePage() {
             <AlertTriangle className="w-4 h-4" /> Reset profile
           </h3>
           <p className="text-xs text-gray-500 leading-relaxed mb-3">
-            This will permanently delete all your generated curriculums, courses, and outcome mappings. This action cannot be undone.
+            This will permanently delete all your generated curriculums, courses, outcome mappings, and program schedules. This action cannot be undone.
           </p>
           <button onClick={() => setShowResetModal(true)} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">
             Reset all data

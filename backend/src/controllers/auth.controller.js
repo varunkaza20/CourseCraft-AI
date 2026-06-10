@@ -125,8 +125,14 @@ export const resetProfile = async (req, res, next) => {
     const userId = req.user.userId;
     const { default: Program } = await import('../models/Program.js');
     const { default: Course }  = await import('../models/Course.js');
+    const { default: OutcomeMapping } = await import('../models/OutcomeMapping.js');
+    const { default: GeneratedProgram } = await import('../models/GeneratedProgram.js');
+    
     await Program.deleteMany({ userId });
     await Course.deleteMany({ userId });
+    await OutcomeMapping.deleteMany({ userId });
+    await GeneratedProgram.deleteMany({ userId });
+    
     res.status(200).json({ message: 'Profile reset successfully' });
   } catch (error) {
     next(error);

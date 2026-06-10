@@ -282,6 +282,94 @@ const generateMappingPDF = (doc, data) => {
       doc.setFont("helvetica", "italic");
       doc.setTextColor(100);
       doc.text("Correlation Scale: 3 (High), 2 (Medium), 1 (Low), - (None)", 14, currentY);
+      }
+  }
+};
+
+// --- PROGRAM SCHEDULE GENERATOR ---
+const generateProgramSchedulePDF = (doc, data) => {
+  doc.setFontSize(22);
+  doc.setFont("helvetica", "bold");
+  doc.text(data.programName || "Program Schedule", 14, 22);
+
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100);
+  doc.text(`${data.difficultyLevel ? data.difficultyLevel.charAt(0).toUpperCase() + data.difficultyLevel.slice(1) : "-"} | ${data.numberOfWeeks} Weeks`, 14, 30);
+  doc.setTextColor(0);
+
+  let currentY = 40;
+  
+  const schedule = data.generatedSchedule || {};
+  
+  if (schedule.programOverview) {
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "italic");
+    const splitDesc = doc.splitTextToSize(schedule.programOverview, 180);
+    doc.text(splitDesc, 14, currentY);
+    currentY += (splitDesc.length * 5) + 8;
+  }
+
+  if (schedule.weeklySchedule?.length > 0) {
+    if (currentY > 250) { doc.addPage(); currentY = 20; }
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Week-Wise Schedule", 14, currentY);
+    
+    const tableRows = schedule.weeklySchedule.map(w => [
+      `W${w.weekNumber}`,
+      w.weekTitle || "-",
+      (w.topics || []).join(", "),
+      w.estimatedHours ? `${w.estimatedHours}h` : "-"
+    ]);
+
+    autoTable(doc, {
+      startY: currentY + 5,
+      head: [["Week", "Title", "Topics", "Est. Hours"]],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: [147, 51, 234] }, // Purple color
+      styles: { fontSize: 9 },
+      columnStyles: {
+        0: { cellWidth: 15, halign: 'center' },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 105 },
+        3: { cellWidth: 20, halign: 'center' },
+      },
+    });
+    currentY = doc.lastAutoTable.finalY + 12;
+  }
+
+  if (data.includesCapstone && schedule.capstoneProject) {
+    if (currentY > 230) { doc.addPage(); currentY = 20; }
+    const capstone = schedule.capstoneProject;
+    
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Capstone Project (${capstone.suggestedWeeks} Weeks)`, 14, currentY);
+    currentY += 8;
+
+    doc.setFontSize(12);
+    doc.text(capstone.title || "Capstone", 14, currentY);
+    currentY += 6;
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    const splitCapDesc = doc.splitTextToSize(capstone.description || "", 180);
+    doc.text(splitCapDesc, 14, currentY);
+    currentY += (splitCapDesc.length * 5) + 8;
+
+    if (capstone.deliverables?.length > 0) {
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.text("Deliverables:", 14, currentY);
+      currentY += 6;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      capstone.deliverables.forEach(d => {
+        doc.text(`• ${d}`, 14, currentY);
+        currentY += 5;
+      });
     }
   }
 };
@@ -304,6 +392,8 @@ export const generateCurriculumPDF = (curriculumData, fileName) => {
       generateCoursePDF(doc, data);
     } else if (docType === "mapping") {
       generateMappingPDF(doc, data);
+    } else if (docType === "generated_program") {
+      generateProgramSchedulePDF(doc, data);
     }
 
     // Trigger browser download

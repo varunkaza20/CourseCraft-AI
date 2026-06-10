@@ -3,11 +3,18 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { GraduationCap } from 'lucide-react';
 import ROUTES from '../../constants/routes';
 import { DEMO_VIDEO_URL } from '../../constants/config';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const isLandingPage = location.pathname === '/';
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.substring(0, 2).toUpperCase();
+  };
 
   const handleFeaturesClick = (e) => {
     e.preventDefault();
@@ -49,12 +56,26 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link to={ROUTES.LOGIN} className="hidden sm:block text-sm font-medium text-gray-700 hover:text-gray-900 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-              Log in
-            </Link>
-            <Link to={ROUTES.LOGIN} className="text-sm font-medium text-white bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg transition-colors">
-              Get Started
-            </Link>
+            {user ? (
+              <Link to={ROUTES.DASHBOARD} className="flex items-center gap-3 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors border border-transparent hover:border-gray-200">
+                <div className="hidden sm:flex flex-col text-right">
+                  <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                  <span className="text-xs text-gray-500">Go to Dashboard</span>
+                </div>
+                <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-sm font-medium shrink-0">
+                  {getInitials(user.name)}
+                </div>
+              </Link>
+            ) : (
+              <>
+                <Link to={ROUTES.LOGIN} className="hidden sm:block text-sm font-medium text-gray-700 hover:text-gray-900 px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  Log in
+                </Link>
+                <Link to={ROUTES.LOGIN} className="text-sm font-medium text-white bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg transition-colors">
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

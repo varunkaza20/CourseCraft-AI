@@ -90,3 +90,33 @@ export function validateMatrixGenerate(req, res, next) {
   next();
 }
 
+export function validateProgramGenerate(req, res, next) {
+  const { programName, difficultyLevel, numberOfWeeks } = req.body;
+
+  if (!programName || programName.trim().length < 3) {
+    return res.status(400).json({
+      message: "Program name must be at least 3 characters"
+    });
+  }
+  if (!["beginner", "intermediate", "advanced"].includes(difficultyLevel)) {
+    return res.status(400).json({
+      message: "Difficulty must be beginner, intermediate, or advanced"
+    });
+  }
+  const weeks = Number(numberOfWeeks);
+  if (!weeks || weeks < 1 || weeks > 50 || !Number.isInteger(weeks)) {
+    return res.status(400).json({
+      message: "Number of weeks must be a whole number between 1 and 50"
+    });
+  }
+  
+  if (req.body.includesCapstone === undefined ||
+      req.body.includesCapstone === null ||
+      typeof req.body.includesCapstone !== "boolean") {
+    return res.status(400).json({
+      message: "Capstone project selection is required (true or false)"
+    });
+  }
+  
+  next();
+}

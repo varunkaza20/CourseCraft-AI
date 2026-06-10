@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useOutcomes } from '../hooks/useOutcomes';
 import { useCourses } from '../hooks/useCourses';
 import { usePrograms } from '../hooks/usePrograms';
+import { useGeneratedPrograms } from '../hooks/useGeneratedPrograms';
 import ExportSection from '../components/export/ExportSection';
 import { Loader2 } from 'lucide-react';
 
@@ -9,6 +10,7 @@ export default function ExportPage() {
   const { getMyMappings, getMappingById, loading: loadingMappings } = useOutcomes();
   const { courses, getCourseById, loadingCourses } = useCourses();
   const { programs, fetchProgramById, loadingPrograms } = usePrograms();
+  const { programs: generatedPrograms, getProgramById: getGeneratedProgramById, loading: loadingGeneratedPrograms } = useGeneratedPrograms();
 
   const [mappings, setMappings] = useState([]);
   
@@ -55,6 +57,11 @@ export default function ExportPage() {
           if (fullProgram) {
             setCurriculumData({ docType: "program", data: fullProgram });
           }
+        } else if (type === "schedule") {
+          const fullGenProgram = await getGeneratedProgramById(id);
+          if (fullGenProgram) {
+            setCurriculumData({ docType: "generated_program", data: fullGenProgram });
+          }
         }
       } catch (err) {
         console.error("Failed to fetch full data", err);
@@ -67,7 +74,7 @@ export default function ExportPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSource]);
 
-  const isLoading = loadingMappings || loadingCourses || loadingPrograms;
+  const isLoading = loadingMappings || loadingCourses || loadingPrograms || loadingGeneratedPrograms;
 
   return (
     <div className="max-w-5xl mx-auto py-8">
@@ -78,7 +85,7 @@ export default function ExportPage() {
 
       <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-8 max-w-xl">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Source</h3>
-        {isLoading && !mappings.length && !courses.length && !programs.length ? (
+        {isLoading && !mappings.length && !courses.length && !programs.length && !generatedPrograms.length ? (
           <div className="flex justify-center p-4"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
         ) : (
           <select
@@ -89,7 +96,7 @@ export default function ExportPage() {
             <option value="">-- Choose a Source to Export --</option>
             
             {programs.length > 0 && (
-              <optgroup label="Generated Curriculums (Programs)">
+              <optgroup label="Curriculums Generated">
                 {programs.map(p => (
                   <option key={`program_${p._id}`} value={`program_${p._id}`}>{p.programName}</option>
                 ))}
@@ -97,7 +104,7 @@ export default function ExportPage() {
             )}
 
             {courses.length > 0 && (
-              <optgroup label="Generated Courses">
+              <optgroup label="Courses Generated">
                 {courses.map(c => (
                   <option key={`course_${c._id}`} value={`course_${c._id}`}>{c.courseCode} - {c.courseName}</option>
                 ))}
@@ -108,6 +115,14 @@ export default function ExportPage() {
               <optgroup label="Mapped Outcomes">
                 {mappings.map(m => (
                   <option key={`mapping_${m._id}`} value={`mapping_${m._id}`}>{m.courseCode} - {m.courseName}</option>
+                ))}
+              </optgroup>
+            )}
+
+            {generatedPrograms?.length > 0 && (
+              <optgroup label="Program Schedules generated">
+                {generatedPrograms.map(p => (
+                  <option key={`schedule_${p._id}`} value={`schedule_${p._id}`}>{p.programName}</option>
                 ))}
               </optgroup>
             )}

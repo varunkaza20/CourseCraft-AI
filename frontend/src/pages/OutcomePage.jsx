@@ -14,6 +14,7 @@ export default function OutcomePage() {
   useEffect(() => {
     if (location.state?.mappingId) {
       loadMapping(location.state.mappingId);
+      window.history.replaceState({}, "");
     }
   }, [location.state]);
 
@@ -29,7 +30,7 @@ export default function OutcomePage() {
   if (loading && !viewingMapping) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -41,7 +42,7 @@ export default function OutcomePage() {
     const posCount = viewingMapping.programOutcomes?.length || 12;
 
     return (
-      <div className="max-w-5xl mx-auto py-8 space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8">
         <div>
           <h2 className="text-3xl font-bold text-gray-800">{viewingMapping.courseName}</h2>
           <p className="text-gray-500 text-lg">{viewingMapping.courseCode} · Outcome Mapping</p>
@@ -61,7 +62,7 @@ export default function OutcomePage() {
           saving={false}
         />
         
-        {/* CSS to hide "Generate CO-PO matrix" button and "Save mapping" button in view mode could be added or handled by props. */}
+        {/* CSS to hide "Generate CO-PO matrix" button and "Save mapping" button in view mode */}
         <style>
           {`
             button:has(.lucide-chevron-right), 

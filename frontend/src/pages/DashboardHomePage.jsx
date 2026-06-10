@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutGrid, BookOpen, BarChart2, FileDown, ArrowRight } from 'lucide-react';
+import { LayoutGrid, BookOpen, BarChart2, FileDown, ArrowRight, Calendar, Trophy } from 'lucide-react';
 import axiosInstance from '../utils/axiosInstance';
 import { usePrograms } from '../hooks/usePrograms';
 import { useCourses } from '../hooks/useCourses';
+import { useGeneratedPrograms } from '../hooks/useGeneratedPrograms';
 import { timeAgo } from '../utils/timeAgo';
 import ROUTES from '../constants/routes';
 
@@ -11,7 +12,8 @@ export default function DashboardHomePage() {
   const navigate = useNavigate();
   const { programs, loadingPrograms } = usePrograms();
   const { courses, loadingCourses } = useCourses();
-  const [stats, setStats] = useState({ curriculums: 0, courses: 0, outcomes: 0, exports: 0 });
+  const { programs: generatedPrograms, loading: loadingGeneratedPrograms } = useGeneratedPrograms();
+  const [stats, setStats] = useState({ curriculums: 0, courses: 0, outcomes: 0, exports: 0, generatedPrograms: 0 });
   const [outcomes, setOutcomes] = useState([]);
   const [loadingOutcomes, setLoadingOutcomes] = useState(true);
 
@@ -30,13 +32,14 @@ export default function DashboardHomePage() {
     { label: 'Total Curriculums', value: stats.curriculums, icon: LayoutGrid, color: 'text-primary',   bg: 'bg-[#EEEDFE]' },
     { label: 'Total Courses',     value: stats.courses,     icon: BookOpen,   color: 'text-[#0F6E56]', bg: 'bg-[#E1F5EE]' },
     { label: 'Outcomes Mapped',   value: stats.outcomes,    icon: BarChart2,  color: 'text-[#B45309]', bg: 'bg-[#FAEEDA]' },
-    { label: 'Exports Done',      value: stats.exports,     icon: FileDown,   color: 'text-[#C2410C]', bg: 'bg-[#FAECE7]' },
+    { label: 'Programs Generated',value: stats.generatedPrograms || 0, icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100' },
   ];
 
   const quickActions = [
     { label: 'Curriculum Builder', desc: 'Create a new semester-wise curriculum', icon: LayoutGrid, bg: 'bg-[#EEEDFE]', color: 'text-primary', btn: 'Open', to: ROUTES.CURRICULUM },
     { label: 'Course Generation', desc: 'Build a detailed course with unit plans',  icon: BookOpen,  bg: 'bg-[#E1F5EE]', color: 'text-[#0F6E56]', btn: 'Open',   to: ROUTES.COURSES },
     { label: 'Outcome Mapping',          desc: "Map COs to POs using Bloom's taxonomy",     icon: BarChart2, bg: 'bg-[#FAEEDA]', color: 'text-[#B45309]', btn: 'Open',      to: ROUTES.OUTCOMES },
+    { label: 'Program Generator', desc: 'Build a week-wise schedule for any workshop or bootcamp', icon: Calendar, bg: 'bg-[#EEEDFE]', color: 'text-purple-600', btn: 'Generate', to: ROUTES.PROGRAMS },
     { label: 'Export And Download',     desc: 'Download reports as PDF or DOCX',           icon: FileDown,  bg: 'bg-[#FAECE7]', color: 'text-[#C2410C]', btn: 'Open',   to: ROUTES.EXPORT },
   ];
 
@@ -74,11 +77,27 @@ export default function DashboardHomePage() {
       iconColor: 'text-[#B45309]',
       to: ROUTES.OUTCOMES,
       state: { mappingId: o._id }
-    }))
+    })),
+    ...(generatedPrograms || []).map(p => {
+      let iconColor = 'text-purple-600';
+      let iconBg = 'bg-purple-100';
+      return {
+        id: p._id,
+        name: p.programName,
+        subtext: `${p.difficultyLevel} · ${p.numberOfWeeks} weeks`,
+        createdAt: p.createdAt,
+        type: 'generated_program',
+        icon: Calendar,
+        iconBg,
+        iconColor,
+        to: ROUTES.PROGRAMS,
+        state: { generatedProgramId: p._id },
+        includesCapstone: p.includesCapstone
+      };
+    })
   ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const recentActivities = activities.slice(0, 5);
-  const loading = loadingPrograms || loadingCourses || loadingOutcomes;
+  const loading = loadingPrograms || loadingCourses || loadingOutcomes || loadingGeneratedPrograms;
 
   return (
     <div className="space-y-8">
@@ -103,7 +122,7 @@ export default function DashboardHomePage() {
       {/* Quick Actions */}
       <div>
         <h2 className="text-base font-medium text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {quickActions.map(({ label, desc, icon: Icon, bg, color, btn, to }) => (
             <div key={label} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4">
@@ -150,7 +169,31 @@ export default function DashboardHomePage() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate max-w-[200px] sm:max-w-xs md:max-w-md">{act.name}</p>
-                        <p className="text-xs text-gray-400 mt-0.5 capitalize">{act.type} · {act.subtext}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 capitalize flex items-center gap-1">
+                          {act.type === 'generated_program' ? 'Program Generator' : act.type} · 
+                          {act.type === 'generated_program' && (
+                            <span className={`px-1.5 py-0.5 rounded-sm ml-1 text-[10px] font-medium ${
+                              act.subtext.includes('beginner') ? 'bg-green-100 text-green-700' :
+                              act.subtext.includes('intermediate') ? 'bg-amber-100 text-amber-700' :
+                              'bg-red-100 text-red-700'
+                            }`}>
+                              {act.subtext.split(' · ')[0]}
+                            </span>
+                          )}
+                          {act.type === 'generated_program' ? (
+                            <>
+                              <span className="ml-0.5">{act.subtext.split(' · ')[1]}</span>
+                              {act.includesCapstone && (
+                                <>
+                                  <span className="text-gray-300 ml-1">·</span>
+                                  <span className="text-amber-600 flex items-center gap-0.5 ml-1">
+                                    <Trophy className="w-3 h-3" /> Capstone
+                                  </span>
+                                </>
+                              )}
+                            </>
+                          ) : act.subtext}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 shrink-0">

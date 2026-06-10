@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { GraduationCap, LayoutGrid, BookOpen, BarChart2, FileDown, ChevronRight, Home, X, Library } from 'lucide-react';
+import { GraduationCap, LayoutGrid, BookOpen, BarChart2, FileDown, ChevronRight, Home, X, Library, Calendar } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import ROUTES from '../../constants/routes';
 
@@ -18,6 +18,7 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
     { name: 'Curriculum Builder',  icon: LayoutGrid, to: ROUTES.CURRICULUM },
     { name: 'Course Generation',   icon: BookOpen,   to: ROUTES.COURSES },
     { name: 'Outcome Mapping',     icon: BarChart2,  to: ROUTES.OUTCOMES },
+    { name: 'Program Generator',   icon: Calendar,   to: ROUTES.PROGRAMS },
     { name: 'View Generated Content', icon: Library, to: ROUTES.LIBRARY },
     { name: 'Export And Download', icon: FileDown,   to: ROUTES.EXPORT },
   ];
