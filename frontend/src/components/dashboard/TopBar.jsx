@@ -16,6 +16,7 @@ export default function TopBar({ toggleSidebar }) {
       case '/dashboard/outcomes': return 'Outcome Mapping';
       case '/dashboard/programs': return 'Program Generator';
       case '/dashboard/export': return 'Export And Download';
+      case '/dashboard/chatbot': return 'Chatbot';
       case '/profile':
       case '/dashboard/profile': return 'My Profile';
       default: return 'Dashboard';

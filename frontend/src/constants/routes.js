@@ -8,6 +8,7 @@ const ROUTES = Object.freeze({
   PROGRAMS            : "/dashboard/programs",
   LIBRARY             : "/dashboard/library",
   EXPORT              : "/dashboard/export",
+  CHATBOT             : "/dashboard/chatbot",
   PROFILE             : "/dashboard/profile"
 })
 export default ROUTES;

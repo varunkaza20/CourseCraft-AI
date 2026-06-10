@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { LayoutGrid, BookOpen, BarChart2, FileDown, ChevronRight, Home, X, Library, Calendar } from 'lucide-react';
+import { LayoutGrid, BookOpen, BarChart2, FileDown, ChevronRight, Home, X, Library, Calendar, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import ROUTES from '../../constants/routes';
 
@@ -82,6 +82,23 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
               </NavLink>
             );
           })}
+
+          <div className="mx-3 my-2 border-t border-gray-100" />
+
+          <NavLink
+            to={ROUTES.CHATBOT}
+            title={!isOpen ? 'Chatbot' : undefined}
+            className={({ isActive }) =>
+              `flex items-center ${isOpen ? 'gap-3 px-3' : 'justify-center px-0'} py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                isActive 
+                  ? 'bg-primary-light text-primary' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`
+            }
+          >
+            <MessageCircle className="w-5 h-5 shrink-0" />
+            {isOpen && <span className="truncate">Chatbot</span>}
+          </NavLink>
         </nav>
 
         {/* Bottom Section */}

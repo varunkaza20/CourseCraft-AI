@@ -15,6 +15,7 @@ import OutcomePage from './pages/OutcomePage';
 import ProgramPage from './pages/ProgramPage';
 import LibraryPage from './pages/LibraryPage';
 import ExportPage from './pages/ExportPage';
+import ChatbotPage from './pages/ChatbotPage';
 
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="programs"   element={<ProgramPage />} />
           <Route path="library"    element={<LibraryPage />} />
           <Route path="export"     element={<ExportPage />} />
+          <Route path="chatbot"    element={<ChatbotPage />} />
           <Route path="profile"    element={<ProfilePage />} />
         </Route>
       </Route>

@@ -1052,3 +1052,190 @@ export const generateWeeklyProgram = async (programData) => {
 };
 
 export { generateCurriculum };
+
+export const chatWithContext = async (chatData) => {
+  function buildContextSummary(contextType, contextData) {
+    if (contextType === "curriculum") {
+      const c = contextData
+      return `
+        CURRICULUM CONTEXT:
+        Program Name    : ${c.programName}
+        Degree Type     : ${c.degreeType}
+        Department      : ${c.department}
+        Specialization  : ${c.specialization}
+        Duration        : ${c.durationYears} years /
+                          ${c.durationSemesters} semesters
+        Total Credits   : ${c.totalCredits}
+
+        SEMESTER WISE COURSES:
+        ${c.generatedCurriculum.semesters.map(sem => `
+          Semester ${sem.semesterNumber} (${sem.totalCredits} credits):
+          ${sem.courses.map(course =>
+            `  - ${course.courseCode}: ${course.courseName}
+               (${course.credits} cr, ${course.type},
+               Lab: ${course.hasLab ? "Yes" : "No"},
+               Difficulty: ${course.difficultyLevel},
+               Prerequisite: ${course.prerequisite || "None"})`
+          ).join("\n")}
+        `).join("\n")}
+
+        PROGRAM OUTCOMES:
+        ${c.generatedCurriculum.programOutcomes.map(po =>
+          `PO${po.poNumber}: ${po.statement}`
+        ).join("\n")}
+
+        PROGRAM SUMMARY:
+        Core Credits        : ${c.generatedCurriculum.programSummary.totalCoreCredits}
+        Elective Credits    : ${c.generatedCurriculum.programSummary.totalElectiveCredits}
+        Open Elective Credits: ${c.generatedCurriculum.programSummary.totalOpenElectiveCredits}
+      `
+    }
+
+    if (contextType === "course") {
+      const c = contextData
+      return `
+        COURSE CONTEXT:
+        Course Name     : ${c.courseName}
+        Course Code     : ${c.courseCode}
+        Credits         : ${c.credits}
+        Difficulty      : ${c.difficultyLevel}
+        Course Type     : ${c.courseType}
+        Includes Lab    : ${c.includesLab ? "Yes" : "No"}
+        Number of Units : ${c.numberOfUnits}
+
+        COURSE DESCRIPTION:
+        ${c.generatedSyllabus.courseDescription}
+
+        PREREQUISITES:
+        ${c.generatedSyllabus.prerequisites.join(", ") || "None"}
+
+        COURSE OBJECTIVES:
+        ${c.generatedSyllabus.courseObjectives.map((obj, i) => `${i + 1}. ${obj}`).join("\n")}
+
+        UNIT WISE SYLLABUS:
+        ${c.generatedSyllabus.units.map(unit => `
+          Unit ${unit.unitNumber}: ${unit.unitTitle}
+          Topics: ${unit.topics.join(", ")}
+          Estimated Hours: ${unit.estimatedHours}
+        `).join("\n")}
+
+        ${c.includesLab && c.generatedSyllabus.labSyllabus?.length ? `LAB SYLLABUS:
+             ${c.generatedSyllabus.labSyllabus.map(exp => `
+               Experiment ${exp.experimentNumber}: ${exp.title}
+               Aim: ${exp.aim}
+               Hours: ${exp.estimatedHours}
+             `).join("\n")}` : ""}
+      `
+    }
+
+    if (contextType === "program") {
+      const c = contextData
+      return `
+        PROGRAM CONTEXT:
+        Program Name    : ${c.programName}
+        Difficulty Level: ${c.difficultyLevel}
+        Number of Weeks : ${c.numberOfWeeks}
+        Includes Capstone: ${c.includesCapstone ? "Yes" : "No"}
+
+        PROGRAM OVERVIEW:
+        ${c.generatedSchedule.programOverview}
+
+        TARGET AUDIENCE:
+        ${c.generatedSchedule.targetAudience}
+
+        PREREQUISITES:
+        ${c.generatedSchedule.prerequisites.join(", ")}
+
+        LEARNING OUTCOMES:
+        ${c.generatedSchedule.learningOutcomes.map((o, i) => `${i + 1}. ${o}`).join("\n")}
+
+        WEEK WISE SCHEDULE:
+        ${c.generatedSchedule.weeklySchedule.map(week => `
+          Week ${week.weekNumber}: ${week.weekTitle}
+          Theme: ${week.theme}
+          Topics: ${week.topics.join(", ")}
+          Activities: ${week.activities.join(", ")}
+          Deliverables: ${week.deliverables.join(", ")}
+          Hours: ${week.estimatedHours}
+        `).join("\n")}
+
+        ${c.includesCapstone && c.generatedSchedule.capstoneProject ? `CAPSTONE PROJECT:
+             Title: ${c.generatedSchedule.capstoneProject.title}
+             Description: ${c.generatedSchedule.capstoneProject.description}
+             Objectives: ${c.generatedSchedule.capstoneProject.objectives.join(", ")}
+             Deliverables: ${c.generatedSchedule.capstoneProject.deliverables.join(", ")}` : ""}
+
+        PROGRAM SUMMARY:
+        Total Hours       : ${c.generatedSchedule.programSummary.totalHours}
+        Total Topics      : ${c.generatedSchedule.programSummary.totalTopics}
+        Total Deliverables: ${c.generatedSchedule.programSummary.totalDeliverables}
+        Recommended Tools : ${c.generatedSchedule.programSummary.recommendedTools.join(", ")}
+      `
+    }
+
+    return "No context available."
+  }
+
+  const contextSummary = buildContextSummary(chatData.contextType, chatData.contextData)
+
+  const response = await callWithRetry(() =>
+    groq.chat.completions.create({
+      model       : "llama-3.3-70b-versatile",
+      temperature : 0.5,
+      max_tokens  : 1024,
+      messages: [
+        {
+          role: "system",
+          content: `
+        You are an expert, highly articulate educational tutor for CourseCraft AI. 
+        You have access to a specific academic dataset (a curriculum, course syllabus, or program schedule).
+        Your job is to teach and answer questions about the topics found within this dataset.
+
+        YOUR KNOWLEDGE BASE (CONTEXT DATA):
+        ${contextSummary}
+
+        STRICT RESPONSE AND FILTERING RULES:
+        1. CONTEXT LOCK: Review the CONTEXT DATA. You can ONLY answer if the user's question directly relates to concepts, tools, technologies, factual details, or topics present inside this dataset. If the question is completely unrelated to the subject matter of the dataset, reply with EXACTLY this word and nothing else:
+           OUT_OF_CONTEXT
+
+        2. ABSOLUTELY FORBIDDEN PHRASES (NO METADATA REFERENCES): 
+           - Do NOT explicitly reference the structure or coordinates of the document. 
+           - NEVER use phrases like: "In Week 2...", "Refer to Unit 4...", "Module 1 covers...", "According to the schedule...", "As seen in this course...", "Based on the provided context...".
+           - Speak directly as an independent expert who simply knows the material.
+
+        3. DYNAMIC & ADAPTIVE FORMATTING:
+           Do NOT use a single fixed format for every answer. You must adapt your response structure organically to match the user's specific intent:
+           - For "What is..." or conceptual questions: Provide a clear, direct explanation, followed by a brief example if applicable.
+           - For "List..." or enumeration questions (e.g., prerequisites, topics, outcomes): Use clean, scannable bullet points.
+           - For specific factual questions (e.g., "How many credits?", "Is there a lab?"): Answer directly and concisely in 1 or 2 sentences.
+           - For "How-to" or process questions: Use clear numbered steps or logical paragraphs.
+           
+        4. TONE & STYLE: Keep your language highly readable. Use bold text to highlight key terms. Do not add conversational fluff at the beginning or end of your response. Answer the prompt directly.
+        ${chatData.customInstructions ? "\\nCUSTOM INSTRUCTIONS:\\n" + chatData.customInstructions : ""}
+      `
+        },
+        ...chatData.conversationHistory.slice(-10).map(msg => ({
+          role    : msg.role,
+          content : msg.content
+        })),
+        {
+          role    : "user",
+          content : chatData.userMessage
+        }
+      ]
+    })
+  );
+
+  const raw = response.choices[0].message.content.trim()
+
+  const isOutOfContext = raw === "OUT_OF_CONTEXT" || raw.startsWith("OUT_OF_CONTEXT")
+
+  return {
+    message      : isOutOfContext
+                   ? "I can only answer questions related to the " +
+                     "selected " + chatData.contextType + ". " +
+                     "Please ask something about it."
+                   : raw,
+    isOutOfContext: isOutOfContext
+  }
+}

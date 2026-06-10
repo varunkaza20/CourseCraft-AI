@@ -6,6 +6,7 @@ import curriculumRoutes from "./routes/curriculum.routes.js"
 import courseRoutes  from "./routes/course.routes.js"
 import outcomeRoutes from "./routes/outcome.routes.js"
 import programRoutes from "./routes/program.routes.js"
+import chatbotRoutes from "./routes/chatbot.routes.js"
 import errorMiddleware  from "./middleware/error.middleware.js"
 import config        from "./config/env.js"
 
@@ -31,6 +32,7 @@ app.use("/api/curriculum", curriculumRoutes)
 app.use("/api/courses",    courseRoutes)
 app.use("/api/outcomes",   outcomeRoutes)
 app.use("/api/programs",   programRoutes)
+app.use("/api/chatbot",    chatbotRoutes)
 
 app.use(errorMiddleware)
 

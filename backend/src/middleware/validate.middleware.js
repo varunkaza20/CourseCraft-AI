@@ -120,3 +120,25 @@ export function validateProgramGenerate(req, res, next) {
   
   next();
 }
+
+export function validateChatMessage(req, res, next) {
+  const { contextType, contextId, userMessage } = req.body
+
+  if (!["curriculum", "course", "program"].includes(contextType))
+    return res.status(400).json({
+      message: "Invalid context type"
+    })
+  if (!contextId)
+    return res.status(400).json({
+      message: "Context ID is required"
+    })
+  if (!userMessage || userMessage.trim().length === 0)
+    return res.status(400).json({
+      message: "Message cannot be empty"
+    })
+  if (userMessage.trim().length > 500)
+    return res.status(400).json({
+      message: "Message cannot exceed 500 characters"
+    })
+  next()
+}
