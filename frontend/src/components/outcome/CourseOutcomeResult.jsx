@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle2, ChevronRight, Activity } from "lucide-react";
+import { normalizeBloomsLabel, getBloomsColor } from "../../utils/bloomsUtils";
 
 export default function CourseOutcomeResult({ outcomes, onProceedToMatrix, loading, includesMatrix = true }) {
   
@@ -34,10 +35,23 @@ export default function CourseOutcomeResult({ outcomes, onProceedToMatrix, loadi
             </div>
             <div className="flex-1">
               <p className="text-gray-800 font-medium mb-2">{co.statement}</p>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                Bloom's: {co.bloomsLevel}
-              </div>
+              {(() => {
+                const label = normalizeBloomsLabel(co.bloomsLevel);
+                const colors = getBloomsColor(label);
+                return (
+                  <span style={{
+                    background  : colors.bg,
+                    color       : colors.text,
+                    border      : `1px solid ${colors.border}`,
+                    fontSize    : "11px",
+                    padding     : "2px 8px",
+                    borderRadius: "9999px",
+                    fontWeight  : 500
+                  }}>
+                    Bloom's: {label}
+                  </span>
+                );
+              })()}
             </div>
           </div>
         ))}

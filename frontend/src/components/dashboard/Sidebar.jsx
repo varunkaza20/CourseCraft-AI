@@ -41,8 +41,8 @@ export default function Sidebar({ isOpen = true, toggleSidebar }) {
         {/* Logo */}
         <div className={`p-6 flex items-center ${isOpen ? 'justify-between' : 'justify-center'}`}>
           <Link to={ROUTES.HOME} className={`flex items-center no-underline ${isOpen ? 'gap-2' : ''}`}>
-            <div className="bg-primary text-white p-1.5 rounded-md flex items-center justify-center shrink-0">
-              <GraduationCap className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 flex items-center justify-center bg-primary/5 shadow-sm">
+              <img src="/logo.jpg" alt="CourseCraft AI" className="w-full h-full object-cover" />
             </div>
             {isOpen && <span className="font-medium text-lg text-gray-900 tracking-tight whitespace-nowrap">CourseCraft AI</span>}
           </Link>

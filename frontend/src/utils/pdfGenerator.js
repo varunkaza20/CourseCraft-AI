@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { normalizeBloomsLabel } from "./bloomsUtils";
 
 // --- PROGRAM GENERATOR ---
 const generateProgramPDF = (doc, data) => {
@@ -216,7 +217,7 @@ const generateMappingPDF = (doc, data) => {
     const coRows = courseOutcomes.map(co => [
       `CO${co.coNumber}`,
       co.statement,
-      co.bloomsLevel
+      normalizeBloomsLabel(co.bloomsLevel)
     ]);
 
     autoTable(doc, {

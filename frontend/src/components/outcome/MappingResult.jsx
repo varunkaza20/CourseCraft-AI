@@ -1,5 +1,6 @@
 import React from 'react';
 import COPOMatrixResult from './COPOMatrixResult';
+import { normalizeBloomsLabel, getBloomsColor } from "../../utils/bloomsUtils";
 
 export default function MappingResult({ mapping }) {
   if (!mapping || !mapping.generatedOutcomes) return null;
@@ -46,9 +47,23 @@ export default function MappingResult({ mapping }) {
                     <td className="px-4 py-3 text-center font-bold text-gray-700">CO{co.coNumber}</td>
                     <td className="px-4 py-3 text-gray-600 leading-relaxed">{co.statement}</td>
                     <td className="px-4 py-3">
-                      <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium">
-                        {co.bloomsLevel}
-                      </span>
+                      {(() => {
+                        const label = normalizeBloomsLabel(co.bloomsLevel);
+                        const colors = getBloomsColor(label);
+                        return (
+                          <span style={{
+                            background  : colors.bg,
+                            color       : colors.text,
+                            border      : `1px solid ${colors.border}`,
+                            fontSize    : "11px",
+                            padding     : "2px 8px",
+                            borderRadius: "9999px",
+                            fontWeight  : 500
+                          }}>
+                            {label}
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}
