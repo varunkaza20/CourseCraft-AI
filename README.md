@@ -100,24 +100,6 @@ graph TD
 
 ---
 
-## 🧠 Explain Like I'm New to Programming
-
-Think of CourseCraft-AI like a very smart academic assistant sitting in your browser.
-
-**The Frontend (React)** is like the front desk of a university office — it's what you see and interact with. You fill out a form asking for a B.Tech CSE curriculum, and the front desk takes your request.
-
-**The Backend (Express.js)** is the back office — it verifies your identity (JWT), checks your paperwork is correct (validation), and then calls the right expert.
-
-**The AI Service (Groq + LLaMA)** is the subject matter expert professor. The backend gives them a very detailed brief: *"Design a 4-year B.Tech CSE curriculum for an Indian university, output it as a JSON object, with exactly these fields, following these rules..."* The professor drafts the course names and structure.
-
-**The Credit Calculator (creditPlan.js)** is the registrar — it independently calculates how many credits each slot gets, so the professor doesn't need to worry about it. The results are merged afterward.
-
-**MongoDB** is the filing cabinet — once the professor's work is verified and merged, it's stored so you can come back to it anytime.
-
-**The Chatbot** works like a teaching assistant who has read your specific document. Ask it anything about *your* course or curriculum, and it only answers from that context — out-of-scope questions are flagged.
-
----
-
 ## 📁 Folder Structure
 
 ```
@@ -454,99 +436,6 @@ Large curriculum and program schedule requests can produce heavy token payloads.
 
 ---
 
-## 🎤 How To Explain This Project In An Interview
-
-### 30-Second Explanation
-
-> "CourseCraft-AI is a full-stack web app I built that uses the Groq LLaMA 3.3 70B model to automate academic curriculum design. A professor enters their degree type and specialization, and the system generates a complete semester plan, detailed course syllabi, and outcome-based education matrices — all in structured JSON that gets saved to MongoDB and rendered in a React dashboard."
-
-### 1-Minute Explanation
-
-> "The core problem I was solving is that designing university curricula and OBE compliance documents is extremely time-consuming. My app takes structured inputs from academic users and sends them to a backend built on Node.js and Express v5, which calls the Groq AI API with carefully engineered system prompts. One key design choice: I never let the LLM handle credit calculations. A JavaScript utility pre-computes the credit plan deterministically, and the LLM only generates course names and metadata. The results are merged and validated before saving to MongoDB. The frontend is in React 19 with Tailwind CSS v4, and I also built a RAG-style chatbot that scopes answers to the user's specific saved documents."
-
-### 3-Minute Technical Explanation
-
-> "Architecturally, this follows a standard client-server pattern: a React SPA communicates with an Express REST API via Axios, with JWT authentication handled through request interceptors. The most interesting engineering work is in `groq.service.js`. The biggest reliability issue with LLM-generated curricula is inconsistent credit totals. I solved this by separating concerns: `creditPlan.js` computes the full semester slot plan in JavaScript — including elective percentages, credit-per-slot assignments, and grand totals. The LLM prompt only asks for course names, codes, difficulty levels, and prerequisite chains. After parsing, I merge the JS-computed credits into the LLM output and run a grand-total assertion. If there's a merge error, it's a code bug, not an AI failure — which makes debugging reliable.
->
-> For output schema enforcement, I use constrained system prompts with explicit field types, cardinality rules, and a `callWithRetry` wrapper for rate-limit resilience. Post-parse validation catches wrong semester counts, wrong course counts per semester (with auto-trim/pad), duplicate course codes, and invalid program outcome counts.
->
-> The CO-PO matrix generation required careful prompt engineering — I embedded the full Bloom's Taxonomy reference, a 0–3 correlation rubric with realistic sparsity expectations (50–60% of cells should be zero), and explicit warnings against inflated high-correlation rows.
->
-> For the chatbot, I deliberately avoided a full vector search pipeline. The relevant document (curriculum, course, or generated program) is fetched from MongoDB and injected into the LLM context. The system prompt scopes answers strictly to that content, and an `isOutOfContext` field on each message tracks when the model correctly refuses out-of-scope questions."
-
-### Interview Questions You May Be Asked
-
-**Basic**
-- What is the purpose of JWT in this project?
-  > *JWT is used for stateless authentication. After login, the backend signs a token with a secret key and stores it in the client's localStorage. Every request includes it in the Authorization header. The `auth.middleware.js` verifies and decodes it to identify the user — no server-side session storage needed.*
-
-- Why did you choose MongoDB over a relational database?
-  > *Curriculum data is deeply nested JSON — semesters contain courses, which contain units, which contain topics. MongoDB's document model stores this naturally. Trying to normalize it into a relational schema would add unnecessary join complexity with little benefit.*
-
-**Intermediate**
-- How does your system handle LLM output errors?
-  > *`groq.service.js` wraps all AI calls in a `callWithRetry` function with up to 3 retries and exponential backoff for rate-limit errors. After each call, it validates the JSON structure (semester count, course count per semester, duplicate course codes, program outcome count). Course count mismatches are auto-corrected by trimming or padding before a hard-fail.*
-
-- Why don't you let the LLM calculate credits?
-  > *LLMs are non-deterministic and frequently produce inconsistent credit sums across retries. Credits follow strict mathematical rules (total must match exactly, elective ratios must be honored). I pre-compute the entire credit plan in JavaScript using `creditPlan.js` and only merge the LLM's naming output into this pre-computed structure. This makes the system deterministic and reliable.*
-
-**Advanced**
-- What bottlenecks might you face at scale and how would you address them?
-  > *The biggest bottleneck is synchronous AI calls — large curriculum generation can take several seconds. At scale, I'd move these to a job queue (e.g., BullMQ + Redis), return a job ID immediately, and use WebSockets or polling to notify the client when generation completes. I'd also add a caching layer for identical or similar curriculum requests.*
-
-- How would you improve CO-PO matrix accuracy?
-  > *Beyond better prompting, I'd evaluate outputs against a rubric using a second AI validation pass, and potentially use a vector store to retrieve similar high-quality CO-PO examples as few-shot examples in the prompt. Fine-tuning on a curated OBE dataset would be the most impactful long-term improvement.*
-
----
-
-## 📄 Resume Descriptions
-
-### One-Line
-> Built CourseCraft-AI, an AI-powered academic curriculum platform generating syllabi, OBE outcomes, CO-PO matrices, and weekly learning programs using the Groq LLaMA 3.3 API and a MERN stack.
-
-### Two-Line
-> Developed a full-stack AI web application (React 19 + Node.js + MongoDB) that automates university curriculum and outcome-based education design using the Groq LLaMA 3.3 70B model. Engineered a deterministic credit-assignment layer and constraint-enforcing prompt pipeline to produce schema-valid, accreditation-ready academic blueprints.
-
-### ATS-Friendly Description
-> CourseCraft-AI | Full-Stack AI Application | React, Node.js, Express.js, MongoDB, Groq API
-> - Designed and built an end-to-end AI-powered platform automating generation of university syllabi, semester curricula, outcome-based education (OBE) matrices, and week-wise learning programs
-> - Engineered `groq.service.js` with structured prompt design, a `callWithRetry` wrapper (exponential backoff for 429s), and post-parse validation to produce schema-valid JSON from LLM outputs
-> - Implemented deterministic credit assignment in `creditPlan.js` — credits are computed in JavaScript and merged into LLM output, never delegated to the AI
-> - Built CO-PO matrix generation with Bloom's Taxonomy correlation criteria embedded in system prompts using LLaMA 3.3 70B via Groq API
-> - Built context-scoped chatbot using MongoDB document injection as RAG context with `isOutOfContext` tracking
-> - Secured multi-user system using JWT authentication with Axios interceptors and bcrypt password hashing in Mongoose pre-save hooks
-> - Implemented client-side PDF export for all document types using jsPDF and jspdf-autotable
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Here's how to get started:
-
-```bash
-# 1. Fork the repository on GitHub
-
-# 2. Clone your fork
-git clone https://github.com/varunkaza20/CourseCraft-AI.git
-cd CourseCraft-AI
-
-# 3. Create a feature branch
-git checkout -b feature/your-feature-name
-
-# 4. Make your changes and commit
-git add .
-git commit -m "feat: add your feature description"
-
-# 5. Push to your fork
-git push origin feature/your-feature-name
-
-# 6. Open a Pull Request on GitHub
-```
-
-Please follow [Conventional Commits](https://www.conventionalcommits.org/) for commit messages.
-
----
-
 ## 📜 License
 
 This project is licensed under the [MIT License](LICENSE) — free to use, modify, and distribute with attribution.
@@ -558,19 +447,6 @@ This project is licensed under the [MIT License](LICENSE) — free to use, modif
 **Varun Kaza**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github)](https://github.com/varunkaza20)
-
----
-
-## 🏆 Project Highlights
-
-| What | Why It Matters |
-|---|---|
-| **Deterministic credit assignment via JS utility** | Shows understanding that LLMs shouldn't own business-critical math — separate concerns correctly |
-| **Post-parse validation and auto-correction layer** | Demonstrates defensive programming and awareness of AI reliability limitations |
-| **RAG-style chatbot without a vector DB** | Pragmatic architecture decision — shows judgment, not just tool usage |
-| **Full OBE + CO-PO workflow** | Domain-specific depth shows ability to model complex, real-world academic processes |
-| **Clean MERN architecture with 6 controllers** | Controller → Service → Model pattern, custom hooks on frontend — readable, maintainable code |
-| **4 distinct document types with PDF export** | Full product thinking — generation, persistence, viewing, and export all complete |
 
 ---
 
