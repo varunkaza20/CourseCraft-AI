@@ -1,1 +1,1 @@
-export const DEMO_VIDEO_URL = "YOUR_GOOGLE_DRIVE_OR_YOUTUBE_URL_HERE";
+export const DEMO_VIDEO_URL = "https://drive.google.com/file/d/14u0at5gZKTqCN-zYMOW3eKYNX7maba_S/view";
