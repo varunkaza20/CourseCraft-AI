@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getMe, updateProfile, changePassword, resetProfile } from "../controllers/auth.controller.js";
+import { register, login, getMe, updateProfile, changePassword, resetProfile, deleteAccount } from "../controllers/auth.controller.js";
 import authMiddleware from "../middleware/auth.middleware.js";
 import { validateRegister, validateLogin } from "../middleware/validate.middleware.js";
 
@@ -11,5 +11,6 @@ router.get("/me", authMiddleware, getMe);
 router.put("/update-profile", authMiddleware, updateProfile);
 router.put("/change-password", authMiddleware, changePassword);
 router.delete("/reset-profile", authMiddleware, resetProfile);
+router.delete("/delete-account", authMiddleware, deleteAccount);
 
 export default router;

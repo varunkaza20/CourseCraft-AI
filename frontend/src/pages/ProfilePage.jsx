@@ -60,6 +60,11 @@ export default function ProfilePage() {
   const [resetInput, setResetInput]         = useState('');
   const [resetting, setResetting]           = useState(false);
 
+  // -- Delete modal --
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteInput, setDeleteInput]         = useState('');
+  const [deleting, setDeleting]               = useState(false);
+
   useEffect(() => {
     // Refresh user to get customInstructions
     axiosInstance.get('/api/auth/me').then(r => {
@@ -117,6 +122,22 @@ export default function ProfilePage() {
     }
   };
 
+  const confirmDelete = async () => {
+    if (deleteInput !== 'DELETE') return;
+    setDeleting(true);
+    try {
+      await axiosInstance.delete('/api/auth/delete-account');
+      setShowDeleteModal(false);
+      setDeleteInput('');
+      logout();
+      navigate(ROUTES.LOGIN);
+    } catch (e) {
+      alert(e.response?.data?.message || 'Delete failed');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const inputCls = "w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors";
   const msgCls   = (type) => `text-xs mt-2 ${type === 'success' ? 'text-green-600' : 'text-red-500'}`;
   const btnCls   = "px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-colors";
@@ -147,15 +168,30 @@ export default function ProfilePage() {
 
         {/* Danger zone */}
         <div className="border border-red-100 rounded-xl p-4">
-          <h3 className="text-sm font-medium text-red-600 mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" /> Reset profile
+          <h3 className="text-sm font-medium text-red-600 mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> Danger Zone
           </h3>
-          <p className="text-xs text-gray-500 leading-relaxed mb-3">
-            This will permanently delete all your generated curriculums, courses, outcome mappings, and program schedules. This action cannot be undone.
-          </p>
-          <button onClick={() => setShowResetModal(true)} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">
-            Reset all data
-          </button>
+          <div className="space-y-5">
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Reset profile</h4>
+              <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                This will permanently delete all your generated curriculums, courses, outcome mappings, and program schedules.
+              </p>
+              <button onClick={() => setShowResetModal(true)} className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 transition-colors">
+                Reset all data
+              </button>
+            </div>
+            
+            <div className="pt-5 border-t border-red-100">
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Delete account</h4>
+              <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                This will permanently delete your entire account, including all generated content and personal data. This action cannot be undone.
+              </p>
+              <button onClick={() => setShowDeleteModal(true)} className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 transition-colors">
+                Delete account
+              </button>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -215,6 +251,34 @@ export default function ProfilePage() {
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {resetting ? 'Resetting...' : 'Confirm reset'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account confirmation modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h3 className="text-base font-medium text-gray-900 mb-2">Delete Account</h3>
+            <p className="text-sm text-gray-500 mb-4">Type <span className="font-mono font-bold text-red-600">DELETE</span> to permanently delete your account and all data. This cannot be undone.</p>
+            <input
+              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-400 mb-4"
+              value={deleteInput}
+              onChange={e => setDeleteInput(e.target.value)}
+              placeholder="Type DELETE"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setShowDeleteModal(false); setDeleteInput(''); }} className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteInput !== 'DELETE' || deleting}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {deleting ? 'Deleting...' : 'Confirm delete'}
               </button>
             </div>
           </div>

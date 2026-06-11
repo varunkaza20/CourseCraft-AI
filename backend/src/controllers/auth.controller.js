@@ -127,13 +127,38 @@ export const resetProfile = async (req, res, next) => {
     const { default: Course }  = await import('../models/Course.js');
     const { default: OutcomeMapping } = await import('../models/OutcomeMapping.js');
     const { default: GeneratedProgram } = await import('../models/GeneratedProgram.js');
+    const { default: ChatSession } = await import('../models/ChatSession.js');
     
     await Program.deleteMany({ userId });
     await Course.deleteMany({ userId });
     await OutcomeMapping.deleteMany({ userId });
     await GeneratedProgram.deleteMany({ userId });
+    await ChatSession.deleteMany({ userId });
     
     res.status(200).json({ message: 'Profile reset successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const { default: Program } = await import('../models/Program.js');
+    const { default: Course }  = await import('../models/Course.js');
+    const { default: OutcomeMapping } = await import('../models/OutcomeMapping.js');
+    const { default: GeneratedProgram } = await import('../models/GeneratedProgram.js');
+    const { default: ChatSession } = await import('../models/ChatSession.js');
+    
+    await Program.deleteMany({ userId });
+    await Course.deleteMany({ userId });
+    await OutcomeMapping.deleteMany({ userId });
+    await GeneratedProgram.deleteMany({ userId });
+    await ChatSession.deleteMany({ userId });
+    
+    await User.findByIdAndDelete(userId);
+    
+    res.status(200).json({ message: 'Account deleted successfully' });
   } catch (error) {
     next(error);
   }
