@@ -6,7 +6,6 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_v9-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Groq](https://img.shields.io/badge/AI-Groq_LLaMA_3.3_70B-FF6B35?style=flat-square)](https://groq.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
 ---
 
@@ -433,12 +432,6 @@ Large curriculum and program schedule requests can produce heavy token payloads.
 - [ ] **Template Library** — Community-shared curriculum templates for common degree programs
 - [ ] **Multilingual Support** — Generate syllabi for regional language universities
 - [ ] **LMS Integration** — Push generated courses directly to Moodle or Google Classroom
-
----
-
-## 📜 License
-
-This project is licensed under the [MIT License](LICENSE) — free to use, modify, and distribute with attribution.
 
 ---
 
